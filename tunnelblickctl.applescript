@@ -45,8 +45,12 @@ script Tunnelblick
     return status
   end
 
-  to start()
+  to launch()
     launch application "Tunnelblick"
+  end
+
+  to run()
+    run application "Tunnelblick"
   end
 
   to quit()
@@ -57,24 +61,73 @@ script Tunnelblick
 
 end
 
-on run argv
-  if (count of argv) > 0 then
-    set command to item 1 of argv
-  else
-    set command to "list"
-  end if
+on newCLI(argv)
+  script CLI
+    property _argv : argv
+    property opts : {}
+    property args : {}
 
-  if command = "list" or command = "ls" then
-    tell Tunnelblick to listTunnels()
-  else if command = "start" then
-    tell Tunnelblick to start()
-  else if command = "status" then
-    tell Tunnelblick to showStatus()
-  else if command = "connect" then
-    tell Tunnelblick to connect(item 2 of argv)
-  else if command = "disconnect" then
-    tell Tunnelblick to disconnect(item 2 of argv)
-  else if command = "quit" then
-    tell Tunnelblick to quit()
-  end if
+    to parseArgs()
+      repeat with arg in (get _argv)
+        set token to arg as string
+        if token starts with "-" then
+          copy token to the end of opts
+        else
+          copy token to the end of args
+        end
+      end
+    end
+
+    to dispatch(command)
+      if command = "connect" then
+        tell Tunnelblick to connect(item 2 of args)
+      else if command = "disconnect" then
+        tell Tunnelblick to disconnect(item 2 of args)
+      else if command is in {"list", "ls"} then
+        tell Tunnelblick to listTunnels()
+      else if command is in {"start", "run"} then
+        run Tunnelblick
+      else if command is in {"stop", "quit"} then
+        tell Tunnelblick to quit()
+      else if command = "status" then
+        tell Tunnelblick to showStatus()
+      else
+        showHelp()
+      end
+    end
+
+    to showHelp()
+      "usage: tunnelblickctl COMMAND
+
+commands:
+
+  connect     connect to a VPN
+  disconnect  disconnect from a VPN
+  help        show this message
+  list, ls    list configurations
+  start       start Tunnelblick
+  stop, quit  quit Tunnelblick
+  status      show status of all VPNs
+  version     show version"
+    end
+
+    on run
+      parseArgs()
+      set command to "help"
+      if count of (get args) > 0 then
+        set command to item 1 of args
+      end
+      if "-h" is in opts or "--help" is in opts then
+        set command to "help"
+      end
+      dispatch(command)
+    end
+
+  end
+  return CLI
+end
+
+on run argv
+  set cli to newCLI(argv)
+  run cli
 end
