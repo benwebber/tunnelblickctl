@@ -1,0 +1,7 @@
+[package]
+name = "tunnelblickctl"
+version = "0.1.0"
+authors = ["Ben Webber"]
+
+[dependencies]
+clap = "2"

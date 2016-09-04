@@ -1,15 +1,11 @@
 .PHONY: clean
 
 PROJECT  = tunnelblickctl
-SOURCES := $(wildcard *.applescript)
-OBJECTS := $(SOURCES:.applescript=.scpt)
 
-$(PROJECT): $(OBJECTS)
-	sed -i '1s|^|#!/usr/bin/env osascript\n|' $<
-	install -m 0755 -T $< $@
+$(PROJECT):
+	cargo build --release
+	install -m 755 -T target/release/$(PROJECT) $(PROJECT)
 
 clean:
-	$(RM) $(OBJECTS)
-
-%.scpt: %.applescript
-	osacompile -o $(@) -x $<
+	cargo clean
+	$(RM) $(PROJECT)
