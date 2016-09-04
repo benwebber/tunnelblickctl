@@ -1,10 +1,13 @@
 #[macro_use]
 extern crate clap;
+extern crate tabwriter;
 
 use std::env;
 use std::error::Error;
 use std::io::prelude::*;
 use std::process::{Command, Stdio};
+use tabwriter::TabWriter;
+
 
 use clap::{App, Arg, SubCommand};
 
@@ -70,7 +73,19 @@ impl Tunnelblick {
         let mut s = String::new();
         match process.stdout.unwrap().read_to_string(&mut s) {
             Err(why) => panic!("couldn't read osascript stdout: {}", why.description()),
-            Ok(_) => print!("{}", s),
+            Ok(_) => {}
+        }
+
+        match self.command.as_ref() {
+            "showStatus" => {
+                let mut tw = TabWriter::new(Vec::new());
+                tw.write(s.as_bytes()).unwrap();
+                tw.flush().unwrap();
+                print!("{}", String::from_utf8(tw.unwrap()).unwrap());
+            }
+            _ => {
+                print!("{}", s);
+            }
         }
     }
 }

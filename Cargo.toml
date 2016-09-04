@@ -5,3 +5,4 @@ authors = ["Ben Webber"]
 
 [dependencies]
 clap = "2"
+tabwriter = "0.1"

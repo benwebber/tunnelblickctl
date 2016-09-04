@@ -1,5 +1,3 @@
-.PHONY: clean
-
 PROJECT  = tunnelblickctl
 
 $(PROJECT):
@@ -9,3 +7,5 @@ $(PROJECT):
 clean:
 	cargo clean
 	$(RM) $(PROJECT)
+
+.PHONY: clean $(PROJECT)
