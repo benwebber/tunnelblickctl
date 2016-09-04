@@ -1,0 +1,77 @@
+#!/usr/bin/env osascript
+
+on start_tunnelblick()
+  launch application "Tunnelblick"
+end
+
+on list_configs()
+  set configs to ""
+  tell application "Tunnelblick"
+    repeat with name in (get name of configurations)
+      set configs to configs & name & "\n"
+    end repeat
+  end tell
+  return configs
+end
+
+on quit_tunnelblick()
+  tell application "Tunnelblick"
+    quit
+  end tell
+end
+
+on status()
+  set status to ""
+  tell application "Tunnelblick"
+    repeat with c in (get name of configurations)
+      set currentConfig to a reference to the first configuration where name = c
+      set _name to (get name of currentConfig)
+      set _state to (get state of currentConfig)
+      set _autoconnect to (get autoconnect of currentConfig)
+      set _rx to (get bytesIn of currentConfig)
+      set _tx to (get bytesOut of currentConfig)
+      set status to status & _name & "\t" & _state & "\t" & _autoconnect & "\t" & _tx & "\t" & _rx & "\n"
+    end repeat
+  end tell
+  return status
+end
+
+on connect(tunnel)
+  tell application "Tunnelblick"
+    connect tunnel
+    get state of first configuration where name = tunnel
+    repeat until result = "CONNECTED"
+      delay 1
+      get state of first configuration where name = tunnel
+    end repeat
+  end tell
+end
+
+on disconnect(tunnel)
+  tell application "Tunnelblick"
+    disconnect tunnel
+  end tell
+end
+
+on run argv
+  set dispatch to {list: list_configs}
+  if (count of argv) > 0 then
+    set command to item 1 of argv
+  else
+    set command to "list"
+  end if
+
+  if command = "list" or command = "ls" then
+    list_configs()
+  else if command = "start" then
+    start_tunnelblick()
+  else if command = "status" then
+    status()
+  else if command = "connect" then
+    connect(item 2 of argv)
+  else if command = "disconnect" then
+    disconnect(item 2 of argv)
+  else if command = "quit" then
+    quit_tunnelblick()
+  end if
+end run
