@@ -119,10 +119,9 @@ fn main() {
         .subcommand(SubCommand::with_name("list")
             .visible_aliases(&["ls"])
             .about("List VPN configurations"))
-        .subcommand(SubCommand::with_name("start").about("Start Tunnelblick"))
+        .subcommand(SubCommand::with_name("launch").about("Launch Tunnelblick"))
         .subcommand(SubCommand::with_name("status").about("Show VPN connection status"))
         .subcommand(SubCommand::with_name("quit")
-            .aliases(&["stop"])
             .about("Quit Tunnelblick"))
         .subcommand(SubCommand::with_name("version").about("Show version information"));
 
@@ -146,7 +145,7 @@ fn main() {
         ("list", Some(_)) => Tunnelblick::new("listTunnels").spawn(),
         ("status", Some(_)) => Tunnelblick::new("showStatus").spawn(),
         ("quit", Some(_)) => Tunnelblick::new("quit").spawn(),
-        ("start", Some(_)) => Tunnelblick::new("run").spawn(),
+        ("launch", Some(_)) => Tunnelblick::new("run").spawn(),
         _ => "".to_owned(),
     };
     print!("{}", output);
