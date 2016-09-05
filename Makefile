@@ -1,4 +1,5 @@
 PROJECT     = tunnelblickctl
+VERSION     = 0.1.0
 
 prefix      = /usr/local
 exec_prefix = $(prefix)
@@ -10,7 +11,12 @@ $(PROJECT):
 
 clean:
 	cargo clean
+	$(RM) -r dist
 	$(RM) $(PROJECT)
+
+dist: $(PROJECT)
+	mkdir -p dist
+	tar -czvf dist/$(PROJECT)-$(VERSION)-x86_64-apple-darwin.tar.gz $(PROJECT)
 
 install: $(PROJECT)
 	install -m 755 target/release/$(PROJECT) $(DESTDIR)$(bindir)
@@ -21,4 +27,4 @@ uninstall:
 fmt:
 	find src -name '*.rs' -exec rustfmt {} \;
 
-.PHONY: clean fmt install uninstall $(PROJECT)
+.PHONY: clean dist fmt install uninstall $(PROJECT)
