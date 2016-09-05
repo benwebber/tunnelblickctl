@@ -1,3 +1,5 @@
+use std::error::Error;
+
 #[macro_use]
 extern crate clap;
 extern crate tabwriter;
@@ -5,21 +7,25 @@ extern crate tabwriter;
 mod cli;
 mod tunnelblick;
 
-fn version() -> String {
+fn version() -> Result<String, Box<Error>> {
     let cli_version = crate_version!();
     let command = tunnelblick::cmd("getVersion");
-    let app_version = tunnelblick::Client::new().send(&command);
-    return format!("{} {}\nTunnelblick {}",
-                   env!("CARGO_PKG_NAME"),
-                   cli_version,
-                   app_version);
+    let app_version = try!(tunnelblick::Client::new().send(&command));
+    return Ok(format!("{} {}\nTunnelblick {}",
+                      env!("CARGO_PKG_NAME"),
+                      cli_version,
+                      app_version));
 }
 
 fn main() {
     let matches = cli::cli().get_matches();
 
     if matches.is_present("version") {
-        print!("{}", version());
+        let version = match version() {
+            Err(why) => panic!(why.to_string()),
+            Ok(v) => v,
+        };
+        print!("{}", version);
         return;
     }
 
@@ -36,5 +42,9 @@ fn main() {
     };
     let client = tunnelblick::Client::new();
     let output = client.send(&cmd);
-    print!("{}", output);
+
+    match output {
+        Err(why) => panic!(why.to_string()),
+        Ok(v) => print!("{}", v),
+    }
 }

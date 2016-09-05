@@ -70,37 +70,28 @@ impl Client {
         return format!("{}\n{}", self.script, command.encode());
     }
 
-    pub fn send(&self, command: &Cmd) -> String {
+    pub fn send(&self, command: &Cmd) -> Result<String, Box<Error>> {
         let script = self.compile_script(command);
 
-        let process = match Command::new("osascript")
+        let process = try!(Command::new("osascript")
             .arg("-")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .spawn() {
-            Err(why) => panic!("couldn't spawn osascript: {}", why.description()),
-            Ok(process) => process,
-        };
+            .spawn());
 
-        match process.stdin.unwrap().write_all(script.as_bytes()) {
-            Err(why) => panic!("couldn't write to osascript stdin: {}", why.description()),
-            Ok(_) => {}
-        }
+        try!(process.stdin.unwrap().write_all(script.as_bytes()));
 
         let mut s = String::new();
-        match process.stdout.unwrap().read_to_string(&mut s) {
-            Err(why) => panic!("couldn't read osascript stdout: {}", why.description()),
-            Ok(_) => {}
-        }
+        try!(process.stdout.unwrap().read_to_string(&mut s));
 
         match command.name.as_ref() {
             "showStatus" => {
                 let mut tw = TabWriter::new(Vec::new());
                 tw.write(s.as_bytes()).unwrap();
                 tw.flush().unwrap();
-                return String::from_utf8(tw.unwrap()).unwrap();
+                return Ok(String::from_utf8(tw.unwrap()).unwrap())
             }
-            _ => return s,
+            _ => return Ok(s),
         }
     }
 }
