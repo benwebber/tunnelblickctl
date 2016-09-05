@@ -1,3 +1,12 @@
+on join(lst, delimiter)
+  set buf to ""
+  set currentDelimiters to AppleScript's text item delimiters
+  set AppleScript's text item delimiters to delimiter
+  set buf to lst as string
+  set AppleScript's text item delimiters to currentDelimiters
+  buf
+end
+
 script Tunnelblick
 
   to connect(tunnel)
@@ -18,29 +27,24 @@ script Tunnelblick
   end
 
   to listTunnels()
-    set configs to ""
     tell application "Tunnelblick"
-      repeat with name in (get name of configurations)
-        set configs to configs & name & "\n"
-      end repeat
+      my join((get name of configurations), "\n")
     end tell
-    return configs
   end
 
   to showStatus()
-    set status to ""
+    set buf to {join({"NAME", "STATE", "AUTOCONNECT", "TX", "RX"}, "\t")}
     tell application "Tunnelblick"
-      repeat with c in (get name of configurations)
-        set currentConfig to a reference to the first configuration where name = c
-        set _name to (get name of currentConfig)
-        set _state to (get state of currentConfig)
-        set _autoconnect to (get autoconnect of currentConfig)
-        set _rx to (get bytesIn of currentConfig)
-        set _tx to (get bytesOut of currentConfig)
-        set status to status & _name & "\t" & _state & "\t" & _autoconnect & "\t" & _tx & "\t" & _rx & "\n"
+      repeat with n in (get name of configurations)
+        set cfg to a reference to the first configuration where name = n
+        copy my join({(get name of cfg), ¬
+                      (get state of cfg), ¬
+                      (get autoconnect of cfg), ¬
+                      (get bytesOut of cfg), ¬
+                      (get bytesIn of cfg)}, "\t") to the end of buf
       end repeat
     end tell
-    return status
+    join(buf, "\n")
   end
 
   to launch()
