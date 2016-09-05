@@ -1,3 +1,5 @@
+# vim: set ft=applescript :
+
 on join(lst, delimiter)
   set buf to ""
   set currentDelimiters to AppleScript's text item delimiters
