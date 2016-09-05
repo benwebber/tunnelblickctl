@@ -117,7 +117,7 @@ fn main() {
                 .index(1)
                 .required(true)))
         .subcommand(SubCommand::with_name("list")
-            .aliases(&["ls"])
+            .visible_aliases(&["ls"])
             .about("List VPN configurations"))
         .subcommand(SubCommand::with_name("start").about("Start Tunnelblick"))
         .subcommand(SubCommand::with_name("status").about("Show VPN connection status"))
