@@ -38,7 +38,7 @@ impl Tunnelblick {
         self
     }
 
-    fn spawn(&self) {
+    fn spawn(&self) -> String {
         let command = match self.command.as_ref() {
             "run" => String::from("run Tunnelblick"),
             _ => {
@@ -81,13 +81,19 @@ impl Tunnelblick {
                 let mut tw = TabWriter::new(Vec::new());
                 tw.write(s.as_bytes()).unwrap();
                 tw.flush().unwrap();
-                print!("{}", String::from_utf8(tw.unwrap()).unwrap());
+                return String::from_utf8(tw.unwrap()).unwrap();
             }
-            _ => {
-                print!("{}", s);
-            }
+            _ => return s,
         }
     }
+}
+
+fn version() -> String {
+    let cli_version = crate_version!();
+    let app_version = Tunnelblick::new("getVersion").spawn();
+    return format!("tunnelblickctl {}\nTunnelblick {}",
+                   cli_version,
+                   app_version);
 }
 
 fn main() {
@@ -95,9 +101,8 @@ fn main() {
 
 
     let mut app = App::new("tunnelblickctl")
-        .version(crate_version!())
+        .setting(AppSettings::DisableVersion)
         .setting(AppSettings::SubcommandRequiredElseHelp)
-        .setting(AppSettings::VersionlessSubcommands)
         .subcommand(SubCommand::with_name("connect")
             .about("Connect to a VPN")
             .arg(Arg::with_name("name")
@@ -117,13 +122,20 @@ fn main() {
         .subcommand(SubCommand::with_name("status").about("Show VPN connection status"))
         .subcommand(SubCommand::with_name("quit")
             .aliases(&["stop"])
-            .about("Quit Tunnelblick"));
+            .about("Quit Tunnelblick"))
+        .subcommand(SubCommand::with_name("version").about("Show version information"));
 
     // Do not consume App with App::get_matches(). Allows us to use
     // App::print_help() below.
     let matches = app.get_matches_from_safe_borrow(env::args()).unwrap_or_else(|e| e.exit());;
 
-    match matches.subcommand() {
+    if matches.is_present("version") {
+        print!("{}", version());
+        return;
+    }
+
+
+    let output = match matches.subcommand() {
         ("connect", Some(m)) => {
             Tunnelblick::new("connect").arg(m.value_of("name").unwrap()).spawn()
         }
@@ -134,6 +146,7 @@ fn main() {
         ("status", Some(_)) => Tunnelblick::new("showStatus").spawn(),
         ("quit", Some(_)) => Tunnelblick::new("quit").spawn(),
         ("start", Some(_)) => Tunnelblick::new("run").spawn(),
-        _ => {}
-    }
+        _ => "".to_owned(),
+    };
+    print!("{}", output);
 }

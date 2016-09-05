@@ -57,4 +57,8 @@ script Tunnelblick
     tell application "Tunnelblick" to quit
   end
 
+  to getVersion()
+    get version of application "Tunnelblick"
+  end
+
 end
