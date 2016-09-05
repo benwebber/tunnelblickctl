@@ -14,15 +14,15 @@ use clap::{App, AppSettings, Arg, SubCommand};
 struct Tunnelblick {
     command: String,
     args: Vec<String>,
-    client: String,
+    script: String,
 }
 
 impl Tunnelblick {
-    fn new(command: &str) -> Tunnelblick {
+    fn command(command: &str) -> Tunnelblick {
         Tunnelblick {
             command: command.to_owned(),
             args: Vec::new(),
-            client: include_str!("tunnelblick.applescript").to_owned(),
+            script: include_str!("tunnelblick.applescript").to_owned(),
         }
     }
 
@@ -38,7 +38,7 @@ impl Tunnelblick {
         self
     }
 
-    fn spawn(&self) -> String {
+    fn compile_script(&self) -> String {
         let command = match self.command.as_ref() {
             "run" => String::from("run Tunnelblick"),
             _ => {
@@ -52,8 +52,11 @@ impl Tunnelblick {
                             .join(","))
             }
         };
+        return format!("{}\n{}", self.script, command);
+    }
 
-        let script = self.client.clone() + &command;
+    fn send(&self) -> String {
+        let script = self.compile_script();
 
         let process = match Command::new("osascript")
             .arg("-")
@@ -63,7 +66,6 @@ impl Tunnelblick {
             Err(why) => panic!("couldn't spawn osascript: {}", why.description()),
             Ok(process) => process,
         };
-
 
         match process.stdin.unwrap().write_all(script.as_bytes()) {
             Err(why) => panic!("couldn't write to osascript stdin: {}", why.description()),
@@ -90,7 +92,7 @@ impl Tunnelblick {
 
 fn version() -> String {
     let cli_version = crate_version!();
-    let app_version = Tunnelblick::new("getVersion").spawn();
+    let app_version = Tunnelblick::command("getVersion").send();
     return format!("{} {}\nTunnelblick {}",
                    env!("CARGO_PKG_NAME"),
                    cli_version,
@@ -137,15 +139,15 @@ fn main() {
 
     let output = match matches.subcommand() {
         ("connect", Some(m)) => {
-            Tunnelblick::new("connect").arg(m.value_of("name").unwrap()).spawn()
+            Tunnelblick::command("connect").arg(m.value_of("name").unwrap()).send()
         }
         ("disconnect", Some(m)) => {
-            Tunnelblick::new("disconnect").arg(m.value_of("name").unwrap()).spawn()
+            Tunnelblick::command("disconnect").arg(m.value_of("name").unwrap()).send()
         }
-        ("list", Some(_)) => Tunnelblick::new("listTunnels").spawn(),
-        ("status", Some(_)) => Tunnelblick::new("showStatus").spawn(),
-        ("quit", Some(_)) => Tunnelblick::new("quit").spawn(),
-        ("launch", Some(_)) => Tunnelblick::new("run").spawn(),
+        ("list", Some(_)) => Tunnelblick::command("listTunnels").send(),
+        ("status", Some(_)) => Tunnelblick::command("showStatus").send(),
+        ("quit", Some(_)) => Tunnelblick::command("quit").send(),
+        ("launch", Some(_)) => Tunnelblick::command("run").send(),
         _ => "".to_owned(),
     };
     print!("{}", output);
