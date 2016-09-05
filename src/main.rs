@@ -91,7 +91,8 @@ impl Tunnelblick {
 fn version() -> String {
     let cli_version = crate_version!();
     let app_version = Tunnelblick::new("getVersion").spawn();
-    return format!("tunnelblickctl {}\nTunnelblick {}",
+    return format!("{} {}\nTunnelblick {}",
+                   env!("CARGO_PKG_NAME"),
                    cli_version,
                    app_version);
 }
@@ -100,7 +101,7 @@ fn main() {
 
 
 
-    let mut app = App::new("tunnelblickctl")
+    let mut app = App::new(env!("CARGO_PKG_NAME"))
         .setting(AppSettings::DisableVersion)
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(SubCommand::with_name("connect")
