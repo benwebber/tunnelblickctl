@@ -8,4 +8,7 @@ clean:
 	cargo clean
 	$(RM) $(PROJECT)
 
-.PHONY: clean $(PROJECT)
+fmt:
+	find src -name '*.rs' -exec rustfmt {} \;
+
+.PHONY: clean fmt $(PROJECT)

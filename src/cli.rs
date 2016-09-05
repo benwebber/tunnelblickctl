@@ -21,7 +21,6 @@ pub fn cli() -> App<'static, 'static> {
             .about("List VPN configurations"))
         .subcommand(SubCommand::with_name("launch").about("Launch Tunnelblick"))
         .subcommand(SubCommand::with_name("status").about("Show VPN connection status"))
-        .subcommand(SubCommand::with_name("quit")
-            .about("Quit Tunnelblick"))
+        .subcommand(SubCommand::with_name("quit").about("Quit Tunnelblick"))
         .subcommand(SubCommand::with_name("version").about("Show version information"));
 }
