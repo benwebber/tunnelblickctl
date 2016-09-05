@@ -3,6 +3,7 @@ use clap::{App, AppSettings, Arg, SubCommand};
 pub fn cli() -> App<'static, 'static> {
     return App::new(env!("CARGO_PKG_NAME"))
         .setting(AppSettings::DisableVersion)
+        .setting(AppSettings::VersionlessSubcommands)
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(SubCommand::with_name("connect")
             .about("Connect to a VPN")
