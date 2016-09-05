@@ -21,9 +21,7 @@ script Tunnelblick
   end
 
   to disconnect(tunnel)
-    tell application "Tunnelblick"
-      disconnect tunnel
-    end tell
+    tell application "Tunnelblick" to disconnect tunnel
   end
 
   to listTunnels()
@@ -56,9 +54,7 @@ script Tunnelblick
   end
 
   to quit()
-    tell application "Tunnelblick"
-      quit
-    end tell
+    tell application "Tunnelblick" to quit
   end
 
 end
