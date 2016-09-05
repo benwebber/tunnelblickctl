@@ -7,7 +7,8 @@ mod tunnelblick;
 
 fn version() -> String {
     let cli_version = crate_version!();
-    let app_version = tunnelblick::Client::command("getVersion").send();
+    let command = tunnelblick::cmd("getVersion");
+    let app_version = tunnelblick::Client::new().send(&command);
     return format!("{} {}\nTunnelblick {}",
                    env!("CARGO_PKG_NAME"),
                    cli_version,
@@ -22,18 +23,18 @@ fn main() {
         return;
     }
 
-    let output = match matches.subcommand() {
-        ("connect", Some(m)) => {
-            tunnelblick::Client::command("connect").arg(m.value_of("name").unwrap()).send()
-        }
-        ("disconnect", Some(m)) => {
-            tunnelblick::Client::command("disconnect").arg(m.value_of("name").unwrap()).send()
-        }
-        ("list", Some(_)) => tunnelblick::Client::command("listTunnels").send(),
-        ("status", Some(_)) => tunnelblick::Client::command("showStatus").send(),
-        ("quit", Some(_)) => tunnelblick::Client::command("quit").send(),
-        ("launch", Some(_)) => tunnelblick::Client::command("run").send(),
-        _ => "".to_owned(),
+    let mut cmd = tunnelblick::Cmd::new();
+    match matches.subcommand() {
+        ("connect", Some(m)) => cmd.cmd("connect").arg(m.value_of("name").unwrap()),
+        ("disconnect", Some(m)) => cmd.cmd("disconnect").arg(m.value_of("name").unwrap()),
+        ("list", Some(_)) => cmd.cmd("listTunnels"),
+        ("status", Some(_)) => cmd.cmd("showStatus"),
+        ("quit", Some(_)) => cmd.cmd("quit"),
+        ("launch", Some(_)) => cmd.cmd("run"),
+        // Should never reach here.
+        _ => panic!("cannot match command"),
     };
+    let client = tunnelblick::Client::new();
+    let output = client.send(&cmd);
     print!("{}", output);
 }

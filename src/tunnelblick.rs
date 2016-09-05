@@ -5,38 +5,45 @@ use std::process::{Command, Stdio};
 use tabwriter::TabWriter;
 
 pub struct Client {
-    command: String,
-    args: Vec<String>,
     script: String,
 }
 
-impl Client {
-    pub fn command(command: &str) -> Client {
-        Client {
-            command: command.to_owned(),
+pub struct Cmd {
+    name: String,
+    args: Vec<String>,
+}
+
+impl Cmd {
+    pub fn new() -> Cmd {
+        Cmd {
+            name: String::new(),
             args: Vec::new(),
-            script: include_str!("tunnelblick.applescript").to_owned(),
         }
     }
 
-    pub fn arg(&mut self, arg: &str) -> &mut Client {
+    pub fn cmd(&mut self, name: &str) -> &mut Cmd {
+        self.name = name.to_owned();
+        self
+    }
+
+    pub fn arg(&mut self, arg: &str) -> &mut Cmd {
         self.args.push(arg.to_owned());
         self
     }
 
-    pub fn args(&mut self, args: &[&str]) -> &mut Client {
+    pub fn args(&mut self, args: &[&str]) -> &mut Cmd {
         for arg in args {
             self.arg(arg);
         }
         self
     }
 
-    fn compile_script(&self) -> String {
-        let command = match self.command.as_ref() {
+    pub fn encode(&self) -> String {
+        return match self.name.as_ref() {
             "run" => String::from("run Tunnelblick"),
             _ => {
                 format!("tell Tunnelblick to {}({})",
-                        self.command,
+                        self.name,
                         // Quote all arguments when rendering script.
                         self.args
                             .iter()
@@ -45,11 +52,26 @@ impl Client {
                             .join(","))
             }
         };
-        return format!("{}\n{}", self.script, command);
+    }
+}
+
+pub fn cmd(name: &str) -> Cmd {
+    let mut cmd = Cmd::new();
+    cmd.cmd(name);
+    cmd
+}
+
+impl Client {
+    pub fn new() -> Client {
+        Client { script: include_str!("tunnelblick.applescript").to_owned() }
     }
 
-    pub fn send(&self) -> String {
-        let script = self.compile_script();
+    fn compile_script(&self, command: &Cmd) -> String {
+        return format!("{}\n{}", self.script, command.encode());
+    }
+
+    pub fn send(&self, command: &Cmd) -> String {
+        let script = self.compile_script(command);
 
         let process = match Command::new("osascript")
             .arg("-")
@@ -71,7 +93,7 @@ impl Client {
             Ok(_) => {}
         }
 
-        match self.command.as_ref() {
+        match command.name.as_ref() {
             "showStatus" => {
                 let mut tw = TabWriter::new(Vec::new());
                 tw.write(s.as_bytes()).unwrap();
