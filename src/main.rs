@@ -97,6 +97,7 @@ fn main() {
     let mut app = App::new("tunnelblickctl")
         .version(crate_version!())
         .setting(AppSettings::SubcommandRequiredElseHelp)
+        .setting(AppSettings::VersionlessSubcommands)
         .subcommand(SubCommand::with_name("connect")
             .about("Connect to a VPN")
             .arg(Arg::with_name("name")
