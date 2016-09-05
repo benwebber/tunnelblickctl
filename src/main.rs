@@ -9,7 +9,7 @@ use std::process::{Command, Stdio};
 use tabwriter::TabWriter;
 
 
-use clap::{App, Arg, SubCommand};
+use clap::{App, AppSettings, Arg, SubCommand};
 
 struct Tunnelblick {
     command: String,
@@ -92,8 +92,11 @@ impl Tunnelblick {
 
 fn main() {
 
+
+
     let mut app = App::new("tunnelblickctl")
         .version(crate_version!())
+        .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(SubCommand::with_name("connect")
             .about("Connect to a VPN")
             .arg(Arg::with_name("name")
@@ -130,9 +133,6 @@ fn main() {
         ("status", Some(_)) => Tunnelblick::new("showStatus").spawn(),
         ("quit", Some(_)) => Tunnelblick::new("quit").spawn(),
         ("start", Some(_)) => Tunnelblick::new("run").spawn(),
-        _ => {
-            app.print_help().unwrap();
-            println!("");
-        }
+        _ => {}
     }
 }
