@@ -8,8 +8,7 @@ use std::io::prelude::*;
 use std::process::{Command, Stdio};
 use tabwriter::TabWriter;
 
-
-use clap::{App, AppSettings, Arg, SubCommand};
+mod cli;
 
 struct Tunnelblick {
     command: String,
@@ -100,42 +99,12 @@ fn version() -> String {
 }
 
 fn main() {
-
-
-
-    let mut app = App::new(env!("CARGO_PKG_NAME"))
-        .setting(AppSettings::DisableVersion)
-        .setting(AppSettings::SubcommandRequiredElseHelp)
-        .subcommand(SubCommand::with_name("connect")
-            .about("Connect to a VPN")
-            .arg(Arg::with_name("name")
-                .help("VPN to connect to")
-                .index(1)
-                .required(true)))
-        .subcommand(SubCommand::with_name("disconnect")
-            .about("Disconnect from a VPN")
-            .arg(Arg::with_name("name")
-                .help("VPN to disconnect from")
-                .index(1)
-                .required(true)))
-        .subcommand(SubCommand::with_name("list")
-            .visible_aliases(&["ls"])
-            .about("List VPN configurations"))
-        .subcommand(SubCommand::with_name("launch").about("Launch Tunnelblick"))
-        .subcommand(SubCommand::with_name("status").about("Show VPN connection status"))
-        .subcommand(SubCommand::with_name("quit")
-            .about("Quit Tunnelblick"))
-        .subcommand(SubCommand::with_name("version").about("Show version information"));
-
-    // Do not consume App with App::get_matches(). Allows us to use
-    // App::print_help() below.
-    let matches = app.get_matches_from_safe_borrow(env::args()).unwrap_or_else(|e| e.exit());;
+    let matches = cli::cli().get_matches();
 
     if matches.is_present("version") {
         print!("{}", version());
         return;
     }
-
 
     let output = match matches.subcommand() {
         ("connect", Some(m)) => {
