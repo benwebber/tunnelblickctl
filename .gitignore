@@ -1,4 +1,5 @@
-tunnelblickctl
+*.bk
 *.scpt
 *.scptd
 target
+tunnelblickctl
