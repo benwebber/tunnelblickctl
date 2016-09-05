@@ -1,4 +1,8 @@
-PROJECT  = tunnelblickctl
+PROJECT     = tunnelblickctl
+
+prefix      = /usr/local
+exec_prefix = $(prefix)
+bindir      = $(exec_prefix)/bin
 
 $(PROJECT):
 	cargo build --release
@@ -8,7 +12,13 @@ clean:
 	cargo clean
 	$(RM) $(PROJECT)
 
+install: $(PROJECT)
+	install -m 755 target/release/$(PROJECT) $(DESTDIR)$(bindir)
+
+uninstall:
+	$(RM) $(DESTDIR)$(bindir)/$(PROJECT)
+
 fmt:
 	find src -name '*.rs' -exec rustfmt {} \;
 
-.PHONY: clean fmt $(PROJECT)
+.PHONY: clean fmt install uninstall $(PROJECT)
