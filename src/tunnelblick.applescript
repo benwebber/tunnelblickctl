@@ -22,6 +22,7 @@ script Tunnelblick
 
   to disconnect(tunnel)
     tell application "Tunnelblick" to disconnect tunnel
+    return
   end
 
   to listTunnels()
@@ -55,6 +56,7 @@ script Tunnelblick
 
   to quit()
     tell application "Tunnelblick" to quit
+    return
   end
 
   to getVersion()
