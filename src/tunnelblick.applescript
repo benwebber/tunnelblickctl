@@ -22,9 +22,17 @@ script Tunnelblick
     end tell
   end
 
+  to connectAll()
+    tell application "Tunnelblick" to connect all
+  end
+
   to disconnect(tunnel)
     tell application "Tunnelblick" to disconnect tunnel
     return
+  end
+
+  to disconnectAll()
+    tell application "Tunnelblick" to disconnect all
   end
 
   to listTunnels()

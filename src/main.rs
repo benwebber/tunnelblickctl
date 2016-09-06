@@ -42,8 +42,20 @@ fn main() {
 
     let mut cmd = tunnelblick::Cmd::new();
     match matches.subcommand() {
-        ("connect", Some(m)) => cmd.cmd("connect").arg(m.value_of("name").unwrap()),
-        ("disconnect", Some(m)) => cmd.cmd("disconnect").arg(m.value_of("name").unwrap()),
+        ("connect", Some(m)) => {
+            if m.is_present("all") {
+                cmd.cmd("connectAll")
+            } else {
+                cmd.cmd("connect").arg(m.value_of("VPN").unwrap())
+            }
+        }
+        ("disconnect", Some(m)) => {
+            if m.is_present("all") {
+                cmd.cmd("disconnectAll")
+            } else {
+                cmd.cmd("disconnect").arg(m.value_of("VPN").unwrap())
+            }
+        }
         ("list", Some(_)) => cmd.cmd("listTunnels"),
         ("status", Some(_)) => cmd.cmd("showStatus"),
         ("quit", Some(_)) => cmd.cmd("quit"),
