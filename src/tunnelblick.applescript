@@ -11,7 +11,14 @@ end
 
 script Tunnelblick
 
+  to assertRunning()
+    if not isRunning()
+      error "Tunnelblick is not running"
+    end
+  end
+
   to connect(tunnel)
+    assertRunning()
     tell application "Tunnelblick"
       connect tunnel
       get state of first configuration where name = tunnel
@@ -23,25 +30,30 @@ script Tunnelblick
   end
 
   to connectAll()
+    assertRunning()
     tell application "Tunnelblick" to connect all
   end
 
   to disconnect(tunnel)
+    assertRunning()
     tell application "Tunnelblick" to disconnect tunnel
     return
   end
 
   to disconnectAll()
+    assertRunning()
     tell application "Tunnelblick" to disconnect all
   end
 
   to getConfigurations()
+    assertRunning()
     tell application "Tunnelblick"
       my join((get name of configurations), "\n")
     end tell
   end
 
   to getStatus()
+    assertRunning()
     set buf to {join({"NAME", "STATE", "AUTOCONNECT", "TX", "RX"}, "\t")}
     tell application "Tunnelblick"
       repeat with n in (get name of configurations)
@@ -56,6 +68,10 @@ script Tunnelblick
     join(buf, "\n")
   end
 
+  to isRunning()
+    application "Tunnelblick" is running
+  end
+
   to launch()
     launch application "Tunnelblick"
   end
@@ -65,8 +81,8 @@ script Tunnelblick
   end
 
   to quit()
+    assertRunning()
     tell application "Tunnelblick" to quit
-    return
   end
 
   to getVersion()
