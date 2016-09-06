@@ -85,7 +85,7 @@ impl Client {
         try!(process.stdout.unwrap().read_to_string(&mut s));
 
         match command.name.as_ref() {
-            "showStatus" => {
+            "getStatus" => {
                 let mut tw = TabWriter::new(Vec::new());
                 tw.write(s.as_bytes()).unwrap();
                 tw.flush().unwrap();

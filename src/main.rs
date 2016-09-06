@@ -56,8 +56,8 @@ fn main() {
                 cmd.cmd("disconnect").arg(m.value_of("VPN").unwrap())
             }
         }
-        ("list", Some(_)) => cmd.cmd("listTunnels"),
-        ("status", Some(_)) => cmd.cmd("showStatus"),
+        ("list", Some(_)) => cmd.cmd("getConfigurations"),
+        ("status", Some(_)) => cmd.cmd("getStatus"),
         ("quit", Some(_)) => cmd.cmd("quit"),
         ("launch", Some(_)) => cmd.cmd("run"),
         // Should never reach here.

@@ -35,13 +35,13 @@ script Tunnelblick
     tell application "Tunnelblick" to disconnect all
   end
 
-  to listTunnels()
+  to getConfigurations()
     tell application "Tunnelblick"
       my join((get name of configurations), "\n")
     end tell
   end
 
-  to showStatus()
+  to getStatus()
     set buf to {join({"NAME", "STATE", "AUTOCONNECT", "TX", "RX"}, "\t")}
     tell application "Tunnelblick"
       repeat with n in (get name of configurations)
