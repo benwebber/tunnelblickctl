@@ -7,6 +7,12 @@ extern crate tabwriter;
 mod cli;
 mod tunnelblick;
 
+fn complete(shell: &str) -> &'static str {
+    return match shell {
+        _ => include_str!("../contrib/tunnelblick.bash"),
+    }
+}
+
 fn version() -> Result<String, Box<Error>> {
     let cli_version = crate_version!();
     let command = tunnelblick::cmd("getVersion");
@@ -26,6 +32,11 @@ fn main() {
             Ok(v) => v,
         };
         print!("{}", version);
+        return;
+    }
+
+    if matches.is_present("complete") {
+        print!("{}", complete("bash"));
         return;
     }
 

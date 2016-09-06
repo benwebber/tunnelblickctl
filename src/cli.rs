@@ -23,5 +23,6 @@ pub fn cli() -> App<'static, 'static> {
         .subcommand(SubCommand::with_name("launch").about("Launch Tunnelblick"))
         .subcommand(SubCommand::with_name("status").about("Show VPN connection status"))
         .subcommand(SubCommand::with_name("quit").about("Quit Tunnelblick"))
-        .subcommand(SubCommand::with_name("version").about("Show version information"));
+        .subcommand(SubCommand::with_name("version").about("Show version information"))
+        .subcommand(SubCommand::with_name("complete").about("Print Bash completion").setting(AppSettings::Hidden));
 }
