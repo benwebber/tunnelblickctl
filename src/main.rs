@@ -1,11 +1,17 @@
+use std::io::Write;
 use std::error::Error;
 
 #[macro_use]
 extern crate clap;
 extern crate tabwriter;
 
+use tabwriter::TabWriter;
+
+mod applescript;
 mod cli;
 mod tunnelblick;
+
+const TUNNELBLICK_SCRIPT: &'static str = include_str!("tunnelblick.applescript");
 
 fn complete(shell: &str) -> &'static str {
     return match shell {
@@ -16,7 +22,9 @@ fn complete(shell: &str) -> &'static str {
 fn version() -> Result<String, Box<Error>> {
     let cli_version = crate_version!();
     let command = tunnelblick::cmd("getVersion");
-    let app_version = try!(tunnelblick::Client::new().send(&command));
+    let mut script = applescript::Script::new(TUNNELBLICK_SCRIPT);
+    script.append(command.encode().as_ref());
+    let app_version = try!(script.execute());
     return Ok(format!("{} {}\nTunnelblick {}",
                       env!("CARGO_PKG_NAME"),
                       cli_version,
@@ -63,11 +71,21 @@ fn main() {
         // Should never reach here.
         _ => panic!("cannot match command"),
     };
-    let client = tunnelblick::Client::new();
-    let output = client.send(&cmd);
+    let mut script = applescript::Script::new(TUNNELBLICK_SCRIPT);
+    script.append(cmd.encode().as_ref());
+    let output = script.execute();
 
     match output {
         Err(why) => panic!(why.to_string()),
-        Ok(v) => print!("{}", v),
+        Ok(v) => {
+            if matches.is_present("status") {
+                let mut tw = TabWriter::new(Vec::new());
+                tw.write(v.as_bytes()).unwrap();
+                tw.flush().unwrap();
+                print!("{}", String::from_utf8(tw.unwrap()).unwrap());
+            } else {
+                print!("{}", v);
+            }
+        }
     }
 }
