@@ -1,5 +1,5 @@
-use std::io::Write;
-use std::error::Error;
+
+use std::error::Error;use std::io::Write;
 
 #[macro_use]
 extern crate clap;
@@ -16,7 +16,7 @@ const TUNNELBLICK_SCRIPT: &'static str = include_str!("tunnelblick.applescript")
 fn complete(shell: &str) -> &'static str {
     return match shell {
         _ => include_str!("../contrib/tunnelblick.bash"),
-    }
+    };
 }
 
 fn version() -> Result<String, Box<Error>> {
