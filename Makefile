@@ -25,6 +25,9 @@ uninstall:
 	$(RM) $(DESTDIR)$(bindir)/$(PROJECT)
 
 fmt:
-	find src -name '*.rs' -exec rustfmt {} \;
+	cargo fmt
+
+lint:
+	cargo fmt -- --write-mode=diff
 
 .PHONY: clean dist fmt install uninstall $(PROJECT)
