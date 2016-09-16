@@ -1,12 +1,16 @@
 PROJECT     = tunnelblickctl
-VERSION     = 0.1.0
 
 prefix      = /usr/local
 exec_prefix = $(prefix)
 bindir      = $(exec_prefix)/bin
 
+ifeq ($(shell git describe >/dev/null 2>&1; echo $$?),0)
+VERSION  := $(shell git describe --tags --always --dirty --match v* | sed 's/^v//')
+CARGO_ENV = VERSION=$(VERSION)
+endif
+
 $(PROJECT):
-	cargo build --release
+	$(CARGO_ENV) cargo build --release
 	install -m 755 -T target/release/$(PROJECT) $(PROJECT)
 
 clean:

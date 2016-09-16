@@ -20,7 +20,7 @@ fn complete(shell: &str) -> &'static str {
 }
 
 fn version() -> Result<String, Box<Error>> {
-    let cli_version = crate_version!();
+    let cli_version = option_env!("VERSION").unwrap_or(env!("CARGO_PKG_VERSION"));
     let command = tunnelblick::cmd("getVersion");
     let mut script = applescript::Script::new(TUNNELBLICK_SCRIPT);
     script.append(command.encode().as_ref());
