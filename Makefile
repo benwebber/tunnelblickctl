@@ -11,6 +11,7 @@ $(PROJECT):
 
 clean:
 	cargo clean
+	find src/ -name '*.bk' -delete
 	$(RM) -r dist
 	$(RM) $(PROJECT)
 
