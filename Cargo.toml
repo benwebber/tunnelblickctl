@@ -4,5 +4,8 @@ version = "0.1.0"
 authors = ["Ben Webber"]
 
 [dependencies]
-clap = "2"
 tabwriter = "0.1"
+
+[dependencies.clap]
+features = ["yaml"]
+version = "^2.12.0"

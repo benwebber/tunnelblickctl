@@ -5,10 +5,10 @@ use std::error::Error;use std::io::Write;
 extern crate clap;
 extern crate tabwriter;
 
+use clap::App;
 use tabwriter::TabWriter;
 
 mod applescript;
-mod cli;
 mod tunnelblick;
 
 const TUNNELBLICK_SCRIPT: &'static str = include_str!("tunnelblick.applescript");
@@ -32,7 +32,8 @@ fn version() -> Result<String, Box<Error>> {
 }
 
 fn main() {
-    let matches = cli::cli().get_matches();
+    let spec = load_yaml!("cli.yaml");
+    let matches = App::from_yaml(spec).get_matches();
 
     if matches.is_present("version") {
         let version = match version() {

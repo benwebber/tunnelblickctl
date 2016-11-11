@@ -1,0 +1,55 @@
+name: tunnelblickctl
+settings:
+  - DisableVersion
+  - VersionlessSubcommands
+  - SubcommandRequiredElseHelp
+
+subcommands:
+  - complete:
+      about: Print Bash completion
+      settings:
+        - Hidden
+  - connect:
+      about: Connect to a VPN
+      args:
+        - VPN:
+            help: VPN to connect to
+            index: 1
+        - all:
+            help: Connect to all VPNs
+            short: a
+            long: all
+      groups:
+        - tunnel:
+            args:
+              - VPN
+              - all
+            required: true
+  - disconnect:
+      about: Disconnect from a VPN
+      args:
+        - VPN:
+            help: VPN to disconnect from
+            index: 1
+        - all:
+            help: Disconnect from all VPNs
+            short: a
+            long: all
+      groups:
+        - tunnel:
+            args:
+              - VPN
+              - all
+            required: true
+  - launch:
+      about: Launch Tunnelblick
+  - list:
+      about: List VPN configurations
+      visible_aliases:
+        - ls
+  - status:
+      about: Show VPN connection status
+  - quit:
+      about: Quit Tunnelblick
+  - version:
+      about: Show version information
