@@ -1,7 +1,16 @@
+use std::error::Error;
+
+use applescript;
+
+
+const TUNNELBLICK_SCRIPT: &'static str = include_str!("tunnelblick.applescript");
+
+
 pub struct Cmd {
     name: String,
     args: Vec<String>,
 }
+
 
 impl Cmd {
     pub fn new() -> Cmd {
@@ -42,6 +51,12 @@ impl Cmd {
                             .join(","))
             }
         };
+    }
+
+    pub fn execute(&self) -> Result<String, Box<Error>> {
+        let mut script = applescript::Script::new(TUNNELBLICK_SCRIPT);
+        script.append(self.encode().as_ref());
+        script.execute()
     }
 }
 

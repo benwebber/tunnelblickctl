@@ -1,5 +1,5 @@
-
-use std::error::Error;use std::io::Write;
+use std::error::Error;
+use std::io::Write;
 
 #[macro_use]
 extern crate clap;
@@ -11,7 +11,6 @@ use tabwriter::TabWriter;
 mod applescript;
 mod tunnelblick;
 
-const TUNNELBLICK_SCRIPT: &'static str = include_str!("tunnelblick.applescript");
 
 fn complete(shell: &str) -> &'static str {
     return match shell {
@@ -22,9 +21,7 @@ fn complete(shell: &str) -> &'static str {
 fn version() -> Result<String, Box<Error>> {
     let cli_version = option_env!("VERSION").unwrap_or(env!("CARGO_PKG_VERSION"));
     let command = tunnelblick::cmd("getVersion");
-    let mut script = applescript::Script::new(TUNNELBLICK_SCRIPT);
-    script.append(command.encode().as_ref());
-    let app_version = try!(script.execute());
+    let app_version = try!(command.execute());
     return Ok(format!("{} {}\nTunnelblick {}",
                       env!("CARGO_PKG_NAME"),
                       cli_version,
@@ -72,9 +69,8 @@ fn main() {
         // Should never reach here.
         _ => panic!("cannot match command"),
     };
-    let mut script = applescript::Script::new(TUNNELBLICK_SCRIPT);
-    script.append(cmd.encode().as_ref());
-    let output = script.execute();
+
+    let output = cmd.execute();
 
     match output {
         Err(why) => panic!(why.to_string()),
