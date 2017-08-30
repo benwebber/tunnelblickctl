@@ -83,7 +83,7 @@ fn main() {
                 let mut tw = TabWriter::new(Vec::new());
                 tw.write(v.as_bytes()).unwrap();
                 tw.flush().unwrap();
-                print!("{}", String::from_utf8(tw.unwrap()).unwrap());
+                print!("{}", String::from_utf8(tw.into_inner().unwrap()).unwrap());
             } else {
                 print!("{}", v);
             }
