@@ -1,6 +1,7 @@
-use std::error::Error;
+
 
 use applescript;
+use std::error::Error;
 
 
 const TUNNELBLICK_SCRIPT: &'static str = include_str!("tunnelblick.applescript");

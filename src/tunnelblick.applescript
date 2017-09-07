@@ -54,7 +54,9 @@ script Tunnelblick
 
   to getStatus()
     assertRunning()
-    set buf to {join({"NAME", "STATE", "AUTOCONNECT", "TX", "RX"}, "\t")}
+    set RECORD_SEPARATOR to character id 30
+    set UNIT_SEPARATOR to character id 31
+    set buf to {join({"name", "state", "autoconnect", "bytesout", "bytesin"}, UNIT_SEPARATOR)}
     tell application "Tunnelblick"
       repeat with n in (get name of configurations)
         set cfg to a reference to the first configuration where name = n
@@ -62,10 +64,10 @@ script Tunnelblick
                       (get state of cfg), ¬
                       (get autoconnect of cfg), ¬
                       (get bytesOut of cfg), ¬
-                      (get bytesIn of cfg)}, "\t") to the end of buf
+                      (get bytesIn of cfg)}, UNIT_SEPARATOR) to the end of buf
       end repeat
     end tell
-    join(buf, "\n")
+    join(buf, RECORD_SEPARATOR)
   end
 
   to isRunning()

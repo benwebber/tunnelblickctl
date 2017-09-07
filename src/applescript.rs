@@ -27,6 +27,8 @@ impl Script {
 
         let mut s = String::new();
         try!(process.stdout.unwrap().read_to_string(&mut s));
+        // `osascript` adds a new line (`\n`) to the end of the output; strip it.
+        s.pop();
 
         return Ok(s);
     }
