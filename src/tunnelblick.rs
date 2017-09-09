@@ -1,4 +1,3 @@
-
 use applescript::{self, AppleScriptCommand};
 use std::error::Error;
 
@@ -42,9 +41,7 @@ pub struct Tunnelblick {
 
 impl Tunnelblick {
     pub fn new() -> Tunnelblick {
-        Tunnelblick {
-            script: applescript::Script::new(TUNNELBLICK_SCRIPT),
-        }
+        Tunnelblick { script: applescript::Script::new(TUNNELBLICK_SCRIPT) }
     }
 
     pub fn execute(&self, command: Command) -> Result<String, Box<Error>> {

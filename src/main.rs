@@ -1,11 +1,10 @@
 use std::error::Error;
 use std::fmt;
-use std::io::{self, Read, Write};
+use std::io::{self, Read};
 use std::str::FromStr;
 
 #[macro_use]
 extern crate clap;
-#[macro_use]
 extern crate csv;
 extern crate serde;
 #[macro_use]
@@ -62,11 +61,11 @@ fn version() -> Result<String, Box<Error>> {
 
 
 fn print_status<R: Read>(mut reader: csv::Reader<R>) -> Result<(), Box<Error>> {
-    let mut tab_writer = TabWriter::new(io::stdout());
+    let tab_writer = TabWriter::new(io::stdout());
     let mut csv_writer = csv::WriterBuilder::new().delimiter(b'\t').from_writer(tab_writer);
     for record in reader.deserialize() {
         let config: Configuration = record?;
-        csv_writer.serialize(config);
+        csv_writer.serialize(config)?;
     }
     Ok(())
 }
