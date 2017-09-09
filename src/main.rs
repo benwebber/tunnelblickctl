@@ -1,7 +1,5 @@
 use std::error::Error;
-use std::fmt;
 use std::io::{self, Read};
-use std::str::FromStr;
 
 #[macro_use]
 extern crate clap;
@@ -13,7 +11,6 @@ extern crate tabwriter;
 
 use clap::App;
 use csv::ReaderBuilder;
-use serde::de::{self, Deserialize, Deserializer};
 use tabwriter::TabWriter;
 
 #[macro_use]
@@ -26,20 +23,8 @@ pub struct Configuration {
     autoconnect: String,
     state: String,
     name: String,
-    #[serde(deserialize_with = "from_str")]
     bytesin: u64,
-    #[serde(deserialize_with = "from_str")]
     bytesout: u64,
-}
-
-
-fn from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
-    where T: FromStr,
-          T::Err: fmt::Display,
-          D: Deserializer<'de>
-{
-    let s = String::deserialize(deserializer)?;
-    T::from_str(&s).map_err(de::Error::custom)
 }
 
 
