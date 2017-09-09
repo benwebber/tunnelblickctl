@@ -49,6 +49,10 @@ subcommands:
         - ls
   - status:
       about: Show VPN connection status
+      args:
+        - bytes:
+            help: Show data transmitted and received in bytes.
+            long: bytes
   - quit:
       about: Quit Tunnelblick
   - version:

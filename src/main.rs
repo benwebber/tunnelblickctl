@@ -4,13 +4,14 @@ use std::io::{self, Read};
 #[macro_use]
 extern crate clap;
 extern crate csv;
-extern crate serde;
+extern crate humansize;
 #[macro_use]
 extern crate serde_derive;
 extern crate tabwriter;
 
 use clap::App;
 use csv::ReaderBuilder;
+use humansize::{FileSize, file_size_opts};
 use tabwriter::TabWriter;
 
 #[macro_use]
@@ -25,6 +26,20 @@ pub struct Configuration {
     name: String,
     bytesin: u64,
     bytesout: u64,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct HumanConfiguration {
+    #[serde(rename = "AUTOCONNECT")]
+    autoconnect: String,
+    #[serde(rename = "STATE")]
+    state: String,
+    #[serde(rename = "NAME")]
+    name: String,
+    #[serde(rename = "TX")]
+    bytesout: String,
+    #[serde(rename = "RX")]
+    bytesin: String,
 }
 
 
@@ -45,12 +60,27 @@ fn version() -> Result<String, Box<Error>> {
 }
 
 
-fn print_status<R: Read>(mut reader: csv::Reader<R>) -> Result<(), Box<Error>> {
+fn humanize(config: Configuration) -> HumanConfiguration {
+    return HumanConfiguration {
+        autoconnect: config.autoconnect,
+        state: config.state,
+        name: config.name,
+        bytesin: config.bytesin.file_size(file_size_opts::BINARY).unwrap(),
+        bytesout: config.bytesin.file_size(file_size_opts::BINARY).unwrap(),
+    }
+}
+
+
+fn print_status<R: Read>(mut reader: csv::Reader<R>, bytes: bool) -> Result<(), Box<Error>> {
     let tab_writer = TabWriter::new(io::stdout());
     let mut csv_writer = csv::WriterBuilder::new().delimiter(b'\t').from_writer(tab_writer);
     for record in reader.deserialize() {
         let config: Configuration = record?;
-        csv_writer.serialize(config)?;
+        if bytes {
+            csv_writer.serialize(config)?;
+        } else {
+            csv_writer.serialize(humanize(config))?;
+        }
     }
     Ok(())
 }
@@ -91,11 +121,20 @@ fn main() {
             }
         }
         ("list", Some(_)) => tunnelblick::Command::GetConfigurations,
-        ("status", Some(_)) => tunnelblick::Command::GetStatus,
+        ("status", Some(_)) => {
+            tunnelblick::Command::GetStatus
+        },
         ("quit", Some(_)) => tunnelblick::Command::Quit,
         ("launch", Some(_)) => tunnelblick::Command::Launch,
         // Should never reach here.
         _ => panic!("cannot match command"),
+    };
+
+    let bytes = match matches.subcommand() {
+        ("status", Some(matches)) => {
+            matches.is_present("bytes")
+        },
+        _ => false,
     };
 
     let output = client.execute(message);
@@ -105,12 +144,10 @@ fn main() {
         Ok(v) => {
             if matches.is_present("status") {
                 let reader = ReaderBuilder::new().ascii().from_reader(v.as_bytes());
-                match print_status(reader) {
+                match print_status(reader, bytes) {
                     Err(v) => panic!(v.to_string()),
                     _ => (),
                 }
-                /*
-                 */
             } else {
                 println!("{}", v);
             }
