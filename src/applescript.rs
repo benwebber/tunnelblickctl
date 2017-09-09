@@ -2,6 +2,7 @@ use std::error::Error;
 use std::io::prelude::*;
 use std::process::{Command, Stdio};
 
+#[derive(Clone)]
 pub struct Script {
     script: String,
 }

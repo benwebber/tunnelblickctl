@@ -51,8 +51,8 @@ fn complete(shell: &str) -> &'static str {
 
 fn version() -> Result<String, Box<Error>> {
     let cli_version = option_env!("VERSION").unwrap_or(env!("CARGO_PKG_VERSION"));
-    let command = tunnelblick::cmd("getVersion");
-    let app_version = try!(command.execute());
+    let client = tunnelblick::Tunnelblick::new();
+    let app_version = try!(client.execute(tunnelblick::Command::GetVersion));
     return Ok(format!("{} {}\nTunnelblick {}\n",
                       env!("CARGO_PKG_NAME"),
                       cli_version,
@@ -89,31 +89,31 @@ fn main() {
         return;
     }
 
-    let mut cmd = tunnelblick::Cmd::new();
-    match matches.subcommand() {
+    let client = tunnelblick::Tunnelblick::new();
+    let message = match matches.subcommand() {
         ("connect", Some(m)) => {
             if m.is_present("all") {
-                cmd.cmd("connectAll")
+                tunnelblick::Command::ConnectAll
             } else {
-                cmd.cmd("connect").arg(m.value_of("VPN").unwrap())
+                tunnelblick::Command::Connect(m.value_of("VPN").unwrap().to_string())
             }
         }
         ("disconnect", Some(m)) => {
             if m.is_present("all") {
-                cmd.cmd("disconnectAll")
+                tunnelblick::Command::DisconnectAll
             } else {
-                cmd.cmd("disconnect").arg(m.value_of("VPN").unwrap())
+                tunnelblick::Command::Disconnect(m.value_of("VPN").unwrap().to_string())
             }
         }
-        ("list", Some(_)) => cmd.cmd("getConfigurations"),
-        ("status", Some(_)) => cmd.cmd("getStatus"),
-        ("quit", Some(_)) => cmd.cmd("quit"),
-        ("launch", Some(_)) => cmd.cmd("run"),
+        ("list", Some(_)) => tunnelblick::Command::GetConfigurations,
+        ("status", Some(_)) => tunnelblick::Command::GetStatus,
+        ("quit", Some(_)) => tunnelblick::Command::Quit,
+        ("launch", Some(_)) => tunnelblick::Command::Launch,
         // Should never reach here.
         _ => panic!("cannot match command"),
     };
 
-    let output = cmd.execute();
+    let output = client.execute(message);
 
     match output {
         Err(why) => panic!(why.to_string()),
