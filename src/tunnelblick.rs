@@ -1,6 +1,5 @@
 
-
-use applescript;
+use applescript::{self, AppleScriptCommand};
 use std::error::Error;
 
 
@@ -20,26 +19,20 @@ pub enum Command {
     Quit,
 }
 
-macro_rules! rpc_format {
-    ($fn:expr) => {
-        format!("tell Tunnelblick to {}()", $fn)
-    };
-    ($fn:expr, $arg:expr) => {
-        format!("tell Tunnelblick to {}(\"{}\")", $fn, $arg)
-    };
-}
-
-fn encode_command(command: Command) -> String {
-    match command {
-        Command::Connect(t) => rpc_format!("connect", t),
-        Command::ConnectAll => rpc_format!("connectAll"),
-        Command::Disconnect(t) => rpc_format!("disconnect", t),
-        Command::DisconnectAll => rpc_format!("disconnectAll"),
-        Command::GetConfigurations => rpc_format!("getConfigurations"),
-        Command::GetStatus => rpc_format!("getStatus"),
-        Command::GetVersion => rpc_format!("getVersion"),
-        Command::Launch => rpc_format!("launch"),
-        Command::Quit => rpc_format!("quit"),
+impl AppleScriptCommand for Command {
+    fn as_rpc_command(&self, script: &str) -> String {
+        use self::Command::*;
+        match self {
+            &Connect(ref t) => rpc_format!(script, "connect", t),
+            &ConnectAll => rpc_format!(script, "connectAll"),
+            &Disconnect(ref t) => rpc_format!(script, "disconnect", t),
+            &DisconnectAll => rpc_format!(script, "disconnectAll"),
+            &GetConfigurations => rpc_format!(script, "getConfigurations"),
+            &GetStatus => rpc_format!(script, "getStatus"),
+            &GetVersion => rpc_format!(script, "getVersion"),
+            &Launch => rpc_format!(script, "launch"),
+            &Quit => rpc_format!(script, "quit"),
+        }
     }
 }
 
@@ -56,7 +49,7 @@ impl Tunnelblick {
 
     pub fn execute(&self, command: Command) -> Result<String, Box<Error>> {
         let mut script = self.script.clone();
-        script.append(encode_command(command).as_ref());
+        script.append(command.as_rpc_command("Tunnelblick").as_ref());
         script.execute()
     }
 }

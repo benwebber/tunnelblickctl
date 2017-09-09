@@ -2,6 +2,20 @@ use std::error::Error;
 use std::io::prelude::*;
 use std::process::{Command, Stdio};
 
+macro_rules! rpc_format {
+    ($script:expr, $fn:expr) => {
+        format!("tell {} to {}()", $script, $fn)
+    };
+    ($script:expr, $fn:expr, $arg:expr) => {
+        format!("tell {} to {}(\"{}\")", $script, $fn, $arg)
+    };
+}
+
+pub trait AppleScriptCommand {
+    fn as_rpc_command(&self, script: &str) -> String;
+}
+
+
 #[derive(Clone)]
 pub struct Script {
     script: String,

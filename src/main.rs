@@ -17,6 +17,7 @@ use csv::ReaderBuilder;
 use serde::de::{self, Deserialize, Deserializer};
 use tabwriter::TabWriter;
 
+#[macro_use]
 mod applescript;
 mod tunnelblick;
 
