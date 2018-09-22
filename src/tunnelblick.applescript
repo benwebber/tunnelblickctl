@@ -70,6 +70,16 @@ script Tunnelblick
     join(buf, RECORD_SEPARATOR)
   end
 
+  to getVersion()
+    get version of application "Tunnelblick"
+  end
+
+  to install(filename)
+    assertRunning()
+    tell application "Tunnelblick" to open filename
+    getConfigurations()
+  end
+
   to isRunning()
     application "Tunnelblick" is running
   end
@@ -78,17 +88,12 @@ script Tunnelblick
     launch application "Tunnelblick"
   end
 
-  to run
-    run application "Tunnelblick"
-  end
-
   to quit()
     assertRunning()
     tell application "Tunnelblick" to quit
   end
 
-  to getVersion()
-    get version of application "Tunnelblick"
+  to run
+    run application "Tunnelblick"
   end
-
 end

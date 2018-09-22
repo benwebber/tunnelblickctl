@@ -41,6 +41,12 @@ subcommands:
               - VPN
               - all
             required: true
+  - install:
+      about: Install an OpenVPN or Tunnelblick configuration
+      args:
+        - FILE:
+            help: Path to OpenVPN configuration file (.ovpn) or Tunnelblick configuration folder (.tblk)
+            required: true
   - launch:
       about: Launch Tunnelblick
   - list:

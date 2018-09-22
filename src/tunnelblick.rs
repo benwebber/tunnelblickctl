@@ -14,6 +14,7 @@ pub enum Command {
     GetConfigurations,
     GetStatus,
     GetVersion,
+    Install(String),
     Launch,
     Quit,
 }
@@ -29,6 +30,7 @@ impl AppleScriptCommand for Command {
             &GetConfigurations => rpc_format!(script, "getConfigurations"),
             &GetStatus => rpc_format!(script, "getStatus"),
             &GetVersion => rpc_format!(script, "getVersion"),
+            &Install(ref t) => rpc_format!(script, "install", t),
             &Launch => rpc_format!(script, "launch"),
             &Quit => rpc_format!(script, "quit"),
         }

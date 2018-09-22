@@ -1,5 +1,7 @@
+use std::fs;
 use std::error::Error;
 use std::io::{self, Read};
+use std::path::PathBuf;
 
 #[macro_use]
 extern crate clap;
@@ -120,6 +122,11 @@ fn main() {
                 tunnelblick::Command::Disconnect(m.value_of("VPN").unwrap().to_string())
             }
         }
+        ("install", Some(m)) => {
+            let path = PathBuf::from(m.value_of("FILE").unwrap().to_string());
+            let absolute_path = fs::canonicalize(&path);
+            tunnelblick::Command::Install(absolute_path.unwrap().to_str().unwrap().to_string())
+        },
         ("list", Some(_)) => tunnelblick::Command::GetConfigurations,
         ("status", Some(_)) => {
             tunnelblick::Command::GetStatus
