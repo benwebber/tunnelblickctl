@@ -1,0 +1,15 @@
+{
+  "name": "tunnelblickctl",
+  "private": false,
+  "dependencies": {},
+  "devDependencies": {
+    "prettier": "^1.19.1",
+    "tslint": "^5.20.1",
+    "typescript": "^3.7.2"
+  },
+  "repository": "git+https://github.com/benwebber/tunnelblickctl.git",
+  "version": "0.1.0",
+  "description": "Command-line interface for Tunnelblick",
+  "author": "Ben Webber <benjamin.webber@gmail.com>",
+  "license": "MIT"
+}

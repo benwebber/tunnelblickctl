@@ -1,5 +1,4 @@
 *.bk
-*.scpt
-*.scptd
+*.js
 target
 tunnelblickctl

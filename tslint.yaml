@@ -1,0 +1,20 @@
+---
+extends: 'tslint:recommended'
+rules:
+  indent:
+    - true
+    - spaces
+    - 2
+  linebreak-style:
+    - true
+    - LF
+  max-classes-per-file: false
+  no-consecutive-blank-lines: false
+  object-literal-sort-keys: false
+  quotemark:
+    - true
+    - single
+    - avoid-escape
+  semicolon:
+    - true
+    - always

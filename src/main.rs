@@ -1,47 +1,51 @@
 use std::fs;
 use std::error::Error;
-use std::io::{self, Read};
+use std::io;
 use std::path::PathBuf;
 
 #[macro_use]
 extern crate clap;
 extern crate csv;
 extern crate humansize;
+extern crate osascript;
+extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate serde_json;
 extern crate tabwriter;
 
 use clap::App;
-use csv::ReaderBuilder;
 use humansize::{FileSize, file_size_opts};
 use tabwriter::TabWriter;
 
 #[macro_use]
-mod applescript;
 mod tunnelblick;
 
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Configuration {
-    autoconnect: String,
-    state: String,
-    name: String,
-    bytesin: u64,
-    bytesout: u64,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
 pub struct HumanConfiguration {
-    #[serde(rename = "AUTOCONNECT")]
-    autoconnect: String,
-    #[serde(rename = "STATE")]
-    state: String,
     #[serde(rename = "NAME")]
     name: String,
+    #[serde(rename = "STATE")]
+    state: String,
+    #[serde(rename = "AUTOCONNECT")]
+    autoconnect: String,
     #[serde(rename = "TX")]
-    bytesout: String,
+    bytes_out: String,
     #[serde(rename = "RX")]
-    bytesin: String,
+    bytes_in: String,
+}
+
+impl From<&tunnelblick::Configuration> for HumanConfiguration {
+    fn from(config: &tunnelblick::Configuration) -> Self {
+        return Self {
+            autoconnect: config.autoconnect.clone(),
+            state: config.state.clone(),
+            name: config.name.clone(),
+            bytes_in: config.bytes_in.file_size(file_size_opts::BINARY).unwrap(),
+            bytes_out: config.bytes_out.file_size(file_size_opts::BINARY).unwrap(),
+        }
+    }
 }
 
 
@@ -51,63 +55,16 @@ fn complete(shell: &str) -> &'static str {
     };
 }
 
-fn version() -> Result<String, Box<Error>> {
-    let cli_version = option_env!("VERSION").unwrap_or(env!("CARGO_PKG_VERSION"));
-    let client = tunnelblick::Tunnelblick::new();
-    let app_version = try!(client.execute(tunnelblick::Command::GetVersion));
-    return Ok(format!("{} {}\nTunnelblick {}\n",
-                      env!("CARGO_PKG_NAME"),
-                      cli_version,
-                      app_version));
-}
-
-
-fn humanize(config: Configuration) -> HumanConfiguration {
-    return HumanConfiguration {
-        autoconnect: config.autoconnect,
-        state: config.state,
-        name: config.name,
-        bytesin: config.bytesin.file_size(file_size_opts::BINARY).unwrap(),
-        bytesout: config.bytesin.file_size(file_size_opts::BINARY).unwrap(),
-    }
-}
-
-
-fn print_status<R: Read>(mut reader: csv::Reader<R>, bytes: bool) -> Result<(), Box<Error>> {
-    let tab_writer = TabWriter::new(io::stdout());
-    let mut csv_writer = csv::WriterBuilder::new().delimiter(b'\t').from_writer(tab_writer);
-    for record in reader.deserialize() {
-        let config: Configuration = record?;
-        if bytes {
-            csv_writer.serialize(config)?;
-        } else {
-            csv_writer.serialize(humanize(config))?;
-        }
-    }
-    Ok(())
-}
-
-
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let spec = load_yaml!("cli.yaml");
     let matches = App::from_yaml(spec).get_matches();
 
-    if matches.is_present("version") {
-        let version = match version() {
-            Err(why) => panic!(why.to_string()),
-            Ok(v) => v,
-        };
-        print!("{}", version);
-        return;
-    }
-
     if matches.is_present("complete") {
         print!("{}", complete("bash"));
-        return;
+        return Ok(());
     }
 
-    let client = tunnelblick::Tunnelblick::new();
-    let message = match matches.subcommand() {
+    let command = match matches.subcommand() {
         ("connect", Some(m)) => {
             if m.is_present("all") {
                 tunnelblick::Command::ConnectAll
@@ -127,14 +84,14 @@ fn main() {
             let absolute_path = fs::canonicalize(&path);
             tunnelblick::Command::Install(absolute_path.unwrap().to_str().unwrap().to_string())
         },
-        ("list", Some(_)) => tunnelblick::Command::GetConfigurations,
+        ("list", Some(_)) => tunnelblick::Command::List,
         ("status", Some(_)) => {
             tunnelblick::Command::GetStatus
         },
         ("quit", Some(_)) => tunnelblick::Command::Quit,
         ("launch", Some(_)) => tunnelblick::Command::Launch,
-        // Should never reach here.
-        _ => panic!("cannot match command"),
+        ("version", Some(_)) => tunnelblick::Command::GetVersion,
+        _ => unreachable!(),
     };
 
     let bytes = match matches.subcommand() {
@@ -144,20 +101,48 @@ fn main() {
         _ => false,
     };
 
-    let output = client.execute(message);
+    let response = command.execute()?;
 
-    match output {
-        Err(why) => panic!(why.to_string()),
-        Ok(v) => {
-            if matches.is_present("status") {
-                let reader = ReaderBuilder::new().ascii().from_reader(v.as_bytes());
-                match print_status(reader, bytes) {
-                    Err(v) => panic!(v.to_string()),
-                    _ => (),
+    match command {
+        tunnelblick::Command::List => {
+            match response {
+                tunnelblick::ResponseData::StringArray(configs) => {
+                    for config in configs.iter() {
+                        println!("{}", config);
+                    }
+                },
+                _ => unreachable!(),
+            }
+        },
+        tunnelblick::Command::GetStatus =>  {
+            match response {
+                tunnelblick::ResponseData::Configurations(configs) => {
+                    let tab_writer = TabWriter::new(io::stdout());
+                    let mut writer = csv::WriterBuilder::new().has_headers(false).delimiter(b'\t').from_writer(tab_writer);
+                    writer.write_record(&["NAME", "STATE", "AUTOCONNECT", "TX", "RX"])?;
+                    for config in configs.iter() {
+                        if bytes {
+                            writer.serialize(config)?;
+                        } else {
+                            let human_config = HumanConfiguration::from(config);
+                            writer.serialize(human_config)?;
+                        }
+                    }
+                },
+                _ => unreachable!(),
+            }
+        },
+        tunnelblick::Command::GetVersion => {
+            match response {
+                tunnelblick::ResponseData::String(s) => {
+                    let version = option_env!("VERSION").unwrap_or(env!("CARGO_PKG_VERSION"));
+                    println!("{} {}\nTunnelblick {}", env!("CARGO_PKG_NAME"), version, s);
                 }
-            } else {
-                println!("{}", v);
+                _ => unreachable!(),
             }
         }
+        _ => (),
     }
+
+    Ok(())
 }
