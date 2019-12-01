@@ -23,6 +23,7 @@ SUBCOMMANDS:
     connect       Connect to a VPN
     disconnect    Disconnect from a VPN
     help          Prints this message or the help of the given subcommand(s)
+    install       Install an OpenVPN or Tunnelblick configuration
     launch        Launch Tunnelblick
     list          List VPN configurations [aliases: ls]
     quit          Quit Tunnelblick
