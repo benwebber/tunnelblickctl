@@ -8,7 +8,7 @@
     "typescript": "^3.7.2"
   },
   "repository": "git+https://github.com/benwebber/tunnelblickctl.git",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Command-line interface for Tunnelblick",
   "author": "Ben Webber <benjamin.webber@gmail.com>",
   "license": "MIT"

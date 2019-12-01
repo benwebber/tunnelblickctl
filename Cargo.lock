@@ -198,7 +198,7 @@ dependencies = [
 
 [[package]]
 name = "tunnelblickctl"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "clap 2.19.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "csv 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
