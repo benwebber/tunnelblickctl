@@ -11,7 +11,7 @@ endif
 
 $(PROJECT): src/tunnelblick.js
 	$(CARGO_ENV) cargo build --release
-	install -m 755 -T target/release/$(PROJECT) $(PROJECT)
+	install -m 755 target/release/$(PROJECT) .
 
 clean:
 	cargo clean
