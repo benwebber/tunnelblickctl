@@ -1,0 +1,35 @@
+---
+image: macos
+
+cache:
+  - ~/.cargo/registry
+  - target
+
+init:
+  - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain stable -y
+  - npm install -g yarn
+  - export PATH="${PATH}:~/.cargo/bin:./node_modules/.bin"
+
+install:
+  - yarn install
+  - tsc --version
+  - rustc --version --verbose
+  - cargo version --verbose
+
+build_script:
+  - make
+  - make dist
+
+artifacts:
+  - path: dist/*.tar.gz
+
+deploy:
+  release: tunnelblickctl $(appveyor_build_version)
+  description: Release $(appveyor_build_version)
+  provider: GitHub
+  auth_token:
+    secure: CIL83XH+qoeVEjfDTXZu6G9Uh9P/wGrsTty7etWi7Knyj9NMTDcix24KHV9VRBjT
+  artifact: /.*\.tar\.gz/
+  on:
+    branch: master
+    APPVEYOR_REPO_TAG: true
