@@ -24,7 +24,6 @@ artifacts:
   - path: dist/*.tar.gz
 
 deploy:
-  release: tunnelblickctl $(appveyor_build_version)
   description: Release $(appveyor_build_version)
   provider: GitHub
   auth_token:
