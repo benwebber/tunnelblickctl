@@ -1,4 +1,5 @@
 *.bk
 *.js
-target
+target/
+node_modules/
 tunnelblickctl
