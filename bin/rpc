@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+
+usage() {
+  cat <<EOF
+usage: $(basename "${0}") METHOD [ARG]
+
+Call Tunnelblick RPC methods directly.
+
+Options:
+
+  -h  show this message and exit
+EOF
+}
+
+
+main() {
+  local rpc
+  while getopts 'h' opt; do
+    case $opt in
+      h)
+        usage
+        return
+        ;;
+      *)
+        usage
+        return 1
+        ;;
+    esac
+  done
+
+  shift $((OPTIND- 1))
+
+  case $# in
+    1)
+      rpc="rpc.call(\"${1}\")"
+      ;;
+    2)
+      rpc="rpc.call(\"${1}\", \"${2}\")"
+      ;;
+    *)
+      usage
+      return 1
+      ;;
+  esac
+
+  cat "${DIR}/../src/tunnelblick.js" - <<< "JSON.stringify(${rpc});" | osascript -l JavaScript -
+
+}
+
+main "${@}"
