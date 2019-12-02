@@ -9,6 +9,7 @@
 ### Fixed
 
 * Fixed crash when Tunnelblick is not installed.
+* Show error message if VPN specified for `connect`/`disconnect` does not exist ([GH-1]).
 
 ## [0.2.0] - 2019-12-01
 
@@ -30,3 +31,5 @@ Initial release
 [Unreleased]: https://github.com/benwebber/tunnelblickctl/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/benwebber/tunnelblickctl/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/benwebber/tunnelblickctl/releases/tag/v0.1.0
+
+[GH-1]: https://github.com/benwebber/tunnelblickctl/issues/1

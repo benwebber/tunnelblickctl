@@ -50,6 +50,7 @@ class TunnelblickController {
 
   public connect(name: string): boolean {
     this.assertRunning();
+    this.assertConfigurationExists(name);
     return this.app.connect(name);
   }
 
@@ -60,6 +61,7 @@ class TunnelblickController {
 
   public disconnect(name: string): boolean {
     this.assertRunning();
+    this.assertConfigurationExists(name);
     return this.app.disconnect(name);
   }
 
@@ -99,6 +101,14 @@ class TunnelblickController {
   private assertRunning(): void {
     if (!this.app.running()) {
       throw new Error('Tunnelblick is not running');
+    }
+  }
+
+  private assertConfigurationExists(name: string): void {
+    const configurations = this.getConfigurations();
+    const config = configurations.find((c) => c.name === name);
+    if (!config) {
+      throw new Error(`VPN '${name}' does not exist`);
     }
   }
 
