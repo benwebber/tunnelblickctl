@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed
+
+* `version` now only reports the Tunnelblick version if Tunnelblick is installed.
+
+### Fixed
+
+* Fixed crash when Tunnelblick is not installed.
+
 ## [0.2.0] - 2019-12-01
 
 ### Added

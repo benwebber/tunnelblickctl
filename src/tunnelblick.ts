@@ -35,8 +35,17 @@ class RPCResponse implements IRPCResponse {
 }
 
 class TunnelblickController {
-  constructor(readonly app: any) {
-    this.app.includeStandardAdditions = true;
+  get app(): any {
+    try {
+      const app = Application('Tunnelblick');
+      app.includeStandardAdditions = true;
+      return app;
+    } catch (err) {
+      if (err.errorNumber === -2700 && err.message.match(/Application can't be found/)) {
+        throw new Error('Tunnelblick is not installed');
+      }
+      throw err;
+    }
   }
 
   public connect(name: string): boolean {
@@ -126,6 +135,5 @@ class RPC {
   }
 }
 
-const tunnelblick = Application('Tunnelblick');
-const tunnelblickctl = new TunnelblickController(tunnelblick);
+const tunnelblickctl = new TunnelblickController();
 const rpc = new RPC(tunnelblickctl);

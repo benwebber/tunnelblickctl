@@ -56,6 +56,7 @@ fn complete(shell: &str) -> &'static str {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let version = option_env!("version").unwrap_or(env!("CARGO_PKG_VERSION"));
     let spec = load_yaml!("cli.yaml");
     let matches = App::from_yaml(spec).get_matches();
 
@@ -101,11 +102,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         _ => false,
     };
 
-    let response = command.execute()?;
+    let response = command.execute();
 
-    match command {
-        tunnelblick::Command::List => {
-            match response {
+    match (command, response) {
+        (tunnelblick::Command::List, Ok(data)) => {
+            match data {
                 tunnelblick::ResponseData::StringArray(configs) => {
                     for config in configs.iter() {
                         println!("{}", config);
@@ -114,8 +115,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 _ => unreachable!(),
             }
         },
-        tunnelblick::Command::GetStatus =>  {
-            match response {
+        (tunnelblick::Command::GetStatus, Ok(data)) => {
+            match data {
                 tunnelblick::ResponseData::Configurations(configs) => {
                     let tab_writer = TabWriter::new(io::stdout());
                     let mut writer = csv::WriterBuilder::new().has_headers(false).delimiter(b'\t').from_writer(tab_writer);
@@ -132,14 +133,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                 _ => unreachable!(),
             }
         },
-        tunnelblick::Command::GetVersion => {
-            match response {
-                tunnelblick::ResponseData::String(s) => {
-                    let version = option_env!("VERSION").unwrap_or(env!("CARGO_PKG_VERSION"));
-                    println!("{} {}\nTunnelblick {}", env!("CARGO_PKG_NAME"), version, s);
-                }
-                _ => unreachable!(),
-            }
+        (tunnelblick::Command::GetVersion, Ok(data)) => {
+            println!("{} {}\nTunnelblick {}", env!("CARGO_PKG_NAME"), version, data);
+        },
+        (tunnelblick::Command::GetVersion, Err(_)) => {
+            println!("{} {}", env!("CARGO_PKG_NAME"), version);
+        },
+        (_, Err(message)) => {
+            return Err(message);
         }
         _ => (),
     }
