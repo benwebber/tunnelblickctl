@@ -5,7 +5,16 @@ Command-line interface for [Tunnelblick](https://tunnelblick.net/), the *de fact
 
 ## Install
 
-Download one of the [pre-compiled releases](https://github.com/benwebber/tunnelblickctl/releases/), then copy it to your `$PATH`.
+### Install latest release with Homebrew
+
+```
+brew tap benwebber/tunnelblickctl
+brew install tunnelblickctl
+```
+
+### Install manually
+
+Download one of the [pre-compiled releases](https://github.com/benwebber/tunnelblickctl/releases/), extract it, then copy `tunnelblickctl` to somewhere on your `$PATH`.
 
 ## Usage
 
