@@ -16,3 +16,7 @@ tabwriter  = "1"
 [dependencies.clap]
 version  = "4"
 features = ["derive"]
+
+[profile.release]
+lto            = true
+codegen-units  = 1
