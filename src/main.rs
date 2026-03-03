@@ -3,26 +3,14 @@ use std::error::Error;
 use std::io;
 use std::path::PathBuf;
 
-#[macro_use]
-extern crate clap;
-extern crate csv;
-extern crate humansize;
-extern crate osascript;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
-extern crate tabwriter;
-
-use clap::App;
-use humansize::{FileSize, file_size_opts};
+use clap::{ArgGroup, Parser, Subcommand};
+use humansize::{format_size, BINARY};
 use tabwriter::TabWriter;
 
-#[macro_use]
 mod tunnelblick;
 
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct HumanConfiguration {
     #[serde(rename = "NAME")]
     name: String,
@@ -38,68 +26,95 @@ pub struct HumanConfiguration {
 
 impl From<&tunnelblick::Configuration> for HumanConfiguration {
     fn from(config: &tunnelblick::Configuration) -> Self {
-        return Self {
+        Self {
             autoconnect: config.autoconnect.clone(),
             state: config.state.clone(),
             name: config.name.clone(),
-            bytes_in: config.bytes_in.file_size(file_size_opts::BINARY).unwrap(),
-            bytes_out: config.bytes_out.file_size(file_size_opts::BINARY).unwrap(),
+            bytes_in:  format_size(config.bytes_in, BINARY),
+            bytes_out: format_size(config.bytes_out, BINARY),
         }
     }
 }
 
 
 fn complete(shell: &str) -> &'static str {
-    return match shell {
+    match shell {
         _ => include_str!("../contrib/tunnelblick.bash"),
-    };
+    }
 }
+
+
+#[derive(Parser)]
+#[command(
+    name = "tunnelblickctl",
+    disable_version_flag = true,
+    subcommand_required = true,
+    arg_required_else_help = true,
+)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    #[command(hide = true)]
+    Complete,
+    #[command(group(ArgGroup::new("tunnel").required(true)))]
+    Connect {
+        #[arg(group = "tunnel")]
+        vpn: Option<String>,
+        #[arg(short, long, group = "tunnel")]
+        all: bool,
+    },
+    #[command(group(ArgGroup::new("tunnel").required(true)))]
+    Disconnect {
+        #[arg(group = "tunnel")]
+        vpn: Option<String>,
+        #[arg(short, long, group = "tunnel")]
+        all: bool,
+    },
+    Install {
+        file: PathBuf,
+    },
+    Launch,
+    #[command(visible_alias = "ls")]
+    List,
+    Status {
+        #[arg(long)]
+        bytes: bool,
+    },
+    Quit,
+    Version,
+}
+
 
 fn main() -> Result<(), Box<dyn Error>> {
     let version = option_env!("version").unwrap_or(env!("CARGO_PKG_VERSION"));
-    let spec = load_yaml!("cli.yaml");
-    let matches = App::from_yaml(spec).get_matches();
+    let cli = Cli::parse();
 
-    if matches.is_present("complete") {
+    if let Commands::Complete = cli.command {
         print!("{}", complete("bash"));
         return Ok(());
     }
 
-    let command = match matches.subcommand() {
-        ("connect", Some(m)) => {
-            if m.is_present("all") {
-                tunnelblick::Command::ConnectAll
-            } else {
-                tunnelblick::Command::Connect(m.value_of("VPN").unwrap().to_string())
-            }
-        }
-        ("disconnect", Some(m)) => {
-            if m.is_present("all") {
-                tunnelblick::Command::DisconnectAll
-            } else {
-                tunnelblick::Command::Disconnect(m.value_of("VPN").unwrap().to_string())
-            }
-        }
-        ("install", Some(m)) => {
-            let path = PathBuf::from(m.value_of("FILE").unwrap().to_string());
-            let absolute_path = fs::canonicalize(&path);
-            tunnelblick::Command::Install(absolute_path.unwrap().to_str().unwrap().to_string())
-        },
-        ("list", Some(_)) => tunnelblick::Command::List,
-        ("status", Some(_)) => {
-            tunnelblick::Command::GetStatus
-        },
-        ("quit", Some(_)) => tunnelblick::Command::Quit,
-        ("launch", Some(_)) => tunnelblick::Command::Launch,
-        ("version", Some(_)) => tunnelblick::Command::GetVersion,
-        _ => unreachable!(),
-    };
+    let bytes = matches!(&cli.command, Commands::Status { bytes: true });
 
-    let bytes = match matches.subcommand() {
-        ("status", Some(matches)) => {
-            matches.is_present("bytes")
-        },
-        _ => false,
+    let command = match cli.command {
+        Commands::Connect { vpn: Some(name), .. } => tunnelblick::Command::Connect(name),
+        Commands::Connect { .. }                  => tunnelblick::Command::ConnectAll,
+        Commands::Disconnect { vpn: Some(name), .. } => tunnelblick::Command::Disconnect(name),
+        Commands::Disconnect { .. }               => tunnelblick::Command::DisconnectAll,
+        Commands::Install { file } => {
+            let abs = fs::canonicalize(&file)?;
+            tunnelblick::Command::Install(abs.to_str().unwrap().to_string())
+        }
+        Commands::List          => tunnelblick::Command::List,
+        Commands::Status { .. } => tunnelblick::Command::GetStatus,
+        Commands::Quit          => tunnelblick::Command::Quit,
+        Commands::Launch        => tunnelblick::Command::Launch,
+        Commands::Version       => tunnelblick::Command::GetVersion,
+        Commands::Complete      => unreachable!(),
     };
 
     let response = command.execute();
@@ -119,7 +134,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             match data {
                 tunnelblick::ResponseData::Configurations(configs) => {
                     let tab_writer = TabWriter::new(io::stdout());
-                    let mut writer = csv::WriterBuilder::new().has_headers(false).delimiter(b'\t').from_writer(tab_writer);
+                    let mut writer = csv::WriterBuilder::new()
+                        .has_headers(false)
+                        .delimiter(b'\t')
+                        .from_writer(tab_writer);
                     writer.write_record(&["NAME", "STATE", "AUTOCONNECT", "TX", "RX"])?;
                     for config in configs.iter() {
                         if bytes {

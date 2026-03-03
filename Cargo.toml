@@ -2,16 +2,17 @@
 name = "tunnelblickctl"
 version = "0.2.0"
 authors = ["Ben Webber"]
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
-csv = "1.1"
-humansize = "~1.1.0"
-osascript = "~0.3.0"
-serde = "~1.0.0"
-serde_derive = "~1.0.0"
-serde_json = "~1.0.0"
-tabwriter = "~1.1.0"
+csv        = "1"
+humansize  = "2"
+osascript  = "0.3"
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+tabwriter  = "1"
 
 [dependencies.clap]
-features = ["yaml"]
-version = "~2.19.0"
+version  = "4"
+features = ["derive"]

@@ -1,7 +1,7 @@
 use std::error;
 use std::fmt;
 
-use osascript;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 pub enum Command {
@@ -96,13 +96,13 @@ impl fmt::Display for Command {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use self::Command::*;
         let call = match self {
-            Connect(ref name) => rpc_format!("connect", name),
+            Connect(name) => rpc_format!("connect", name),
             ConnectAll => rpc_format!("connectAll"),
-            Disconnect(ref name) => rpc_format!("disconnect", name),
+            Disconnect(name) => rpc_format!("disconnect", name),
             DisconnectAll => rpc_format!("disconnectAll"),
             GetStatus => rpc_format!("getStatus"),
             GetVersion => rpc_format!("getVersion"),
-            Install(ref name) => rpc_format!("install", name),
+            Install(name) => rpc_format!("install", name),
             Launch => rpc_format!("launch"),
             List => rpc_format!("list"),
             Quit => rpc_format!("quit"),

@@ -1,7 +1,6 @@
 {
   "name": "tunnelblickctl",
   "private": false,
-  "dependencies": {},
   "devDependencies": {
     "prettier": "^1.19.1",
     "tslint": "^5.20.1",
