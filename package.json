@@ -2,9 +2,10 @@
   "name": "tunnelblickctl",
   "private": false,
   "devDependencies": {
+    "eslint": "^9",
     "prettier": "^1.19.1",
-    "tslint": "^5.20.1",
-    "typescript": "^3.7.2"
+    "typescript": "^5",
+    "typescript-eslint": "^8"
   },
   "repository": "git+https://github.com/benwebber/tunnelblickctl.git",
   "version": "0.2.0",

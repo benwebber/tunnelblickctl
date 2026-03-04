@@ -31,6 +31,6 @@ fmt:
 
 lint:
 	cargo clippy
-	tslint src/*.ts
+	eslint src/*.ts
 
 .PHONY: clean dist fmt install uninstall $(PROJECT)
