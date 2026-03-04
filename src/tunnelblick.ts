@@ -7,31 +7,17 @@ enum RPCStatus {
   Error = 'error',
 }
 
-interface IRPCResponse {
-  status: RPCStatus;
-  data: any;
+interface Configuration {
+  readonly name: string;
+  readonly state: string;
+  readonly autoconnect: string;
+  readonly bytesIn: number;
+  readonly bytesOut: number;
 }
 
-interface IConfiguration {
-  name: string;
-  state: string;
-  autoconnect: string;
-  bytesIn: number;
-  bytesOut: number;
-}
-
-class Configuration implements IConfiguration {
-  constructor(
-    readonly name: string,
-    readonly state: string,
-    readonly autoconnect: string,
-    readonly bytesIn: number,
-    readonly bytesOut: number,
-  ) {}
-}
-
-class RPCResponse implements IRPCResponse {
-  constructor(readonly status: RPCStatus, readonly data: any) {}
+interface RPCResponse {
+  readonly status: RPCStatus;
+  readonly data: unknown;
 }
 
 class TunnelblickController {
@@ -41,58 +27,59 @@ class TunnelblickController {
       app.includeStandardAdditions = true;
       return app;
     } catch (err) {
-      if (err.errorNumber === -2700 && err.message.match(/Application can't be found/)) {
+      const e = err as { errorNumber: number; message: string };
+      if (e.errorNumber === -2700 && e.message.match(/Application can't be found/)) {
         throw new Error('Tunnelblick is not installed');
       }
       throw err;
     }
   }
 
-  public connect(name: string): boolean {
+  connect(name: string): boolean {
     this.assertRunning();
     this.assertConfigurationExists(name);
     return this.app.connect(name);
   }
 
-  public connectAll(): number {
+  connectAll(): number {
     this.assertRunning();
     return this.app.connectAll();
   }
 
-  public disconnect(name: string): boolean {
+  disconnect(name: string): boolean {
     this.assertRunning();
     this.assertConfigurationExists(name);
     return this.app.disconnect(name);
   }
 
-  public disconnectAll(): number {
+  disconnectAll(): number {
     this.assertRunning();
     return this.app.disconnectAll();
   }
 
-  public getStatus(): Configuration[] {
+  getStatus(): Configuration[] {
     return this.getConfigurations();
   }
 
-  public getVersion(): string {
+  getVersion(): string {
     return this.app.version();
   }
 
-  public install(path: string): void {
+  install(path: string): void {
     this.assertRunning();
     const finder = Application('Finder');
-    return finder.open([Path(path)], {using: this.app.pathTo()});
+    return finder.open([Path(path)], { using: this.app.pathTo() });
   }
 
-  public launch(): boolean {
+  launch(): boolean {
     return this.app.launch();
   }
 
-  public list(): string[] {
+  list(): string[] {
     return this.getConfigurations().map((config) => config.name);
   }
 
-  public quit(): boolean {
+  quit(): boolean {
     this.assertRunning();
     this.app.quit();
     return true;
@@ -105,8 +92,7 @@ class TunnelblickController {
   }
 
   private assertConfigurationExists(name: string): void {
-    const configurations = this.getConfigurations();
-    const config = configurations.find((c) => c.name === name);
+    const config = this.getConfigurations().find((c) => c.name === name);
     if (!config) {
       throw new Error(`VPN '${name}' does not exist`);
     }
@@ -114,33 +100,29 @@ class TunnelblickController {
 
   private getConfigurations(): Configuration[] {
     this.assertRunning();
-    const configs = [];
-    for (let i = 0; i < this.app.configurations().length; i++) {
+    const length = this.app.configurations().length;
+    return Array.from({ length }, (_, i) => {
       const config = this.app.configurations.at(i);
-      configs.push(
-        new Configuration(
-          config.name(),
-          config.state(),
-          config.autoconnect(),
-          Number.parseInt(config.bytesout(), 10),
-          Number.parseInt(config.bytesin(), 10),
-        ),
-      );
-    }
-    return configs;
+      return {
+        name: config.name(),
+        state: config.state(),
+        autoconnect: config.autoconnect(),
+        bytesIn: Number.parseInt(config.bytesin(), 10),
+        bytesOut: Number.parseInt(config.bytesout(), 10),
+      };
+    });
   }
-
 }
 
 class RPC {
   constructor(readonly service: any) {}
 
-  public call(method: string, ...args: any[]): RPCResponse {
+  call(method: string, ...args: any[]): RPCResponse {
     try {
       const data = this.service[method](...args);
-      return new RPCResponse(RPCStatus.Success, data);
+      return { status: RPCStatus.Success, data };
     } catch (err) {
-      return new RPCResponse(RPCStatus.Error, err.message);
+      return { status: RPCStatus.Error, data: (err as Error).message };
     }
   }
 }
