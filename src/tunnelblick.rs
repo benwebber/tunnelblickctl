@@ -152,7 +152,10 @@ mod tests {
     fn response_success_configurations() {
         let json = r#"{"status":"success","data":[{"name":"vpn","state":"CONNECTED","autoconnect":"yes","bytesIn":1024,"bytesOut":2048}]}"#;
         let r: Response = serde_json::from_str(json).unwrap();
-        assert!(matches!(r, Response::Success(ResponseData::Configurations(_))));
+        assert!(matches!(
+            r,
+            Response::Success(ResponseData::Configurations(_))
+        ));
     }
 
     #[test]
@@ -177,16 +180,19 @@ mod tests {
         r#"[{"name":"vpn","state":"CONNECTED","autoconnect":"yes","bytesIn":1024,"bytesOut":2048}]"#,
         ResponseData::Configurations(_)
     );
-    test_response_data!(response_data_string_array, r#"["a","b"]"#, ResponseData::StringArray(_));
+    test_response_data!(
+        response_data_string_array,
+        r#"["a","b"]"#,
+        ResponseData::StringArray(_)
+    );
     test_response_data!(response_data_string, r#""hello""#, ResponseData::String(_));
     test_response_data!(response_data_boolean, "true", ResponseData::Boolean(_));
     test_response_data!(response_data_integer, "42", ResponseData::Integer(_));
 
     #[test]
     fn execute_with_get_version_success() {
-        let result = Command::GetVersion.execute_with(|_| {
-            Ok(Response::Success(ResponseData::String("5.3.4".to_string())))
-        });
+        let result = Command::GetVersion
+            .execute_with(|_| Ok(Response::Success(ResponseData::String("5.3.4".to_string()))));
         assert!(matches!(result, Ok(ResponseData::String(_))));
     }
 
@@ -222,13 +228,16 @@ mod tests {
         let result = Command::GetVersion
             .execute_with(|_| Ok(Response::Error("Tunnelblick is not running".to_string())));
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "Tunnelblick is not running");
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Tunnelblick is not running"
+        );
     }
 
     #[test]
     fn execute_with_runner_error() {
-        let result = Command::GetVersion
-            .execute_with(|_| -> Result<Response, Box<dyn std::error::Error>> {
+        let result =
+            Command::GetVersion.execute_with(|_| -> Result<Response, Box<dyn std::error::Error>> {
                 Err("runner failed".into())
             });
         assert!(result.is_err());
@@ -278,7 +287,11 @@ mod tests {
         Command::Install("/path/to/vpn.tblk".to_string()),
         r#"return rpc.call("install", "/path/to/vpn.tblk");"#
     );
-    test_command_display!(display_launch, Command::Launch, r#"return rpc.call("launch");"#);
+    test_command_display!(
+        display_launch,
+        Command::Launch,
+        r#"return rpc.call("launch");"#
+    );
     test_command_display!(display_list, Command::List, r#"return rpc.call("list");"#);
     test_command_display!(display_quit, Command::Quit, r#"return rpc.call("quit");"#);
 }

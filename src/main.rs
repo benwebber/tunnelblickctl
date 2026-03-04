@@ -167,6 +167,12 @@ mod tests {
     use clap::Parser;
 
     macro_rules! test_cli {
+        ($name:ident, [$($arg:expr),*], Err(_)) => {
+            #[test]
+            fn $name() {
+                assert!(Cli::try_parse_from(["tunnelblickctl" $(, $arg)*]).is_err());
+            }
+        };
         ($name:ident, [$($arg:expr),*], $pat:pat) => {
             #[test]
             fn $name() {
@@ -177,15 +183,51 @@ mod tests {
         };
     }
 
-    test_cli!(connect_vpn, ["connect", "work-vpn"], Ok(Commands::Connect { vpn: Some(_), all: false }));
-    test_cli!(connect_all, ["connect", "--all"], Ok(Commands::Connect { vpn: None, all: true }));
+    test_cli!(
+        connect_vpn,
+        ["connect", "work-vpn"],
+        Ok(Commands::Connect {
+            vpn: Some(_),
+            all: false
+        })
+    );
+    test_cli!(
+        connect_all,
+        ["connect", "--all"],
+        Ok(Commands::Connect {
+            vpn: None,
+            all: true
+        })
+    );
     test_cli!(connect_no_args, ["connect"], Err(_));
     test_cli!(connect_exclusive, ["connect", "work-vpn", "--all"], Err(_));
-    test_cli!(disconnect_vpn, ["disconnect", "work-vpn"], Ok(Commands::Disconnect { vpn: Some(_), all: false }));
-    test_cli!(disconnect_all, ["disconnect", "--all"], Ok(Commands::Disconnect { vpn: None, all: true }));
+    test_cli!(
+        disconnect_vpn,
+        ["disconnect", "work-vpn"],
+        Ok(Commands::Disconnect {
+            vpn: Some(_),
+            all: false
+        })
+    );
+    test_cli!(
+        disconnect_all,
+        ["disconnect", "--all"],
+        Ok(Commands::Disconnect {
+            vpn: None,
+            all: true
+        })
+    );
     test_cli!(list_alias, ["ls"], Ok(Commands::List));
-    test_cli!(status_default, ["status"], Ok(Commands::Status { bytes: false }));
-    test_cli!(status_bytes, ["status", "--bytes"], Ok(Commands::Status { bytes: true }));
+    test_cli!(
+        status_default,
+        ["status"],
+        Ok(Commands::Status { bytes: false })
+    );
+    test_cli!(
+        status_bytes,
+        ["status", "--bytes"],
+        Ok(Commands::Status { bytes: true })
+    );
     test_cli!(no_subcommand, [], Err(_));
 
     macro_rules! test_human_config {
