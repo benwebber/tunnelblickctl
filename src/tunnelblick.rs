@@ -115,7 +115,7 @@ impl Command {
         let response: Response = script.execute()?;
         match response {
             Response::Success(data) => Ok(data),
-            Response::Error(message) => Err(Box::new(Error { message: message })),
+            Response::Error(message) => Err(Box::new(Error { message })),
         }
     }
 }

@@ -129,7 +129,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     .has_headers(false)
                     .delimiter(b'\t')
                     .from_writer(tab_writer);
-                writer.write_record(&["NAME", "STATE", "AUTOCONNECT", "TX", "RX"])?;
+                writer.write_record(["NAME", "STATE", "AUTOCONNECT", "TX", "RX"])?;
                 for config in configs.iter() {
                     if bytes {
                         writer.serialize(config)?;

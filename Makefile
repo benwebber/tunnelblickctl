@@ -30,7 +30,7 @@ fmt:
 	cargo fmt
 
 lint:
-	cargo fmt -- --write-mode=diff
+	cargo clippy
 	tslint src/*.ts
 
 .PHONY: clean dist fmt install uninstall $(PROJECT)
