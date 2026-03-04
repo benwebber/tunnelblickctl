@@ -107,7 +107,7 @@ impl fmt::Display for Command {
             List => rpc_format!("list"),
             Quit => rpc_format!("quit"),
         };
-        let script = include_str!("tunnelblick.js");
+        let script = include_str!(concat!(env!("OUT_DIR"), "/tunnelblick.js"));
         write!(f, "{}{}", script, call)
     }
 }

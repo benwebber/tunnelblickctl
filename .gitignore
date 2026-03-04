@@ -1,5 +1,2 @@
-*.bk
-*.js
-target/
-node_modules/
-tunnelblickctl
+/node_modules/
+/target/

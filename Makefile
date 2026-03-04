@@ -9,10 +9,6 @@ VERSION  := $(shell git describe --tags --always --dirty --match v* | sed 's/^v/
 CARGO_ENV = VERSION=$(VERSION)
 endif
 
-$(PROJECT): src/tunnelblick.js
-	$(CARGO_ENV) cargo build --release
-	install -m 755 target/release/$(PROJECT) .
-
 clean:
 	cargo clean
 	find src/ -name '*.bk' -delete
@@ -36,8 +32,5 @@ fmt:
 lint:
 	cargo fmt -- --write-mode=diff
 	tslint src/*.ts
-
-src/%.js: src/%.ts
-	tsc --lib es2015 --strict --target es5 $<
 
 .PHONY: clean dist fmt install uninstall $(PROJECT)
