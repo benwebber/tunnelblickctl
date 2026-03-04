@@ -35,12 +35,6 @@ impl From<&tunnelblick::Configuration> for HumanConfiguration {
     }
 }
 
-fn complete(shell: &str) -> &'static str {
-    match shell {
-        _ => include_str!("../contrib/tunnelblick.bash"),
-    }
-}
-
 #[derive(Parser)]
 #[command(
     name = "tunnelblickctl",
@@ -90,7 +84,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
     if let Commands::Complete = cli.command {
-        print!("{}", complete("bash"));
+        print!("{}", include_str!("../contrib/tunnelblick.bash"));
         return Ok(());
     }
 
