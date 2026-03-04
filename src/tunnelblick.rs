@@ -24,22 +24,20 @@ pub struct Configuration {
     pub name: String,
     pub state: String,
     pub autoconnect: String,
-    #[serde(rename="bytesOut")]
+    #[serde(rename = "bytesOut")]
     pub bytes_out: u64,
-    #[serde(rename="bytesIn")]
+    #[serde(rename = "bytesIn")]
     pub bytes_in: u64,
 }
-
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "status", content = "data")]
 pub enum Response {
-    #[serde(rename="success")]
+    #[serde(rename = "success")]
     Success(ResponseData),
-    #[serde(rename="error")]
+    #[serde(rename = "error")]
     Error(String),
 }
-
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -50,7 +48,6 @@ pub enum ResponseData {
     Boolean(bool),
     Integer(i64),
 }
-
 
 impl fmt::Display for ResponseData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -65,7 +62,7 @@ impl fmt::Display for ResponseData {
 }
 
 pub struct Error {
-    message: String
+    message: String,
 }
 
 // main() prints errors with debug formatting. Use the default string format instead of `Error { ... }`.
@@ -118,7 +115,7 @@ impl Command {
         let response: Response = script.execute()?;
         match response {
             Response::Success(data) => Ok(data),
-            Response::Error(message) => Err(Box::new(Error {message: message})),
+            Response::Error(message) => Err(Box::new(Error { message: message })),
         }
     }
 }

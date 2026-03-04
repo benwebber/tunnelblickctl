@@ -1,14 +1,13 @@
-use std::fs;
 use std::error::Error;
+use std::fs;
 use std::io;
 use std::path::PathBuf;
 
 use clap::{ArgGroup, Parser, Subcommand};
-use humansize::{format_size, BINARY};
+use humansize::{BINARY, format_size};
 use tabwriter::TabWriter;
 
 mod tunnelblick;
-
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct HumanConfiguration {
@@ -30,12 +29,11 @@ impl From<&tunnelblick::Configuration> for HumanConfiguration {
             autoconnect: config.autoconnect.clone(),
             state: config.state.clone(),
             name: config.name.clone(),
-            bytes_in:  format_size(config.bytes_in, BINARY),
+            bytes_in: format_size(config.bytes_in, BINARY),
             bytes_out: format_size(config.bytes_out, BINARY),
         }
     }
 }
-
 
 fn complete(shell: &str) -> &'static str {
     match shell {
@@ -43,13 +41,12 @@ fn complete(shell: &str) -> &'static str {
     }
 }
 
-
 #[derive(Parser)]
 #[command(
     name = "tunnelblickctl",
     disable_version_flag = true,
     subcommand_required = true,
-    arg_required_else_help = true,
+    arg_required_else_help = true
 )]
 struct Cli {
     #[command(subcommand)]
@@ -88,7 +85,6 @@ enum Commands {
     Version,
 }
 
-
 fn main() -> Result<(), Box<dyn Error>> {
     let version = option_env!("version").unwrap_or(env!("CARGO_PKG_VERSION"));
     let cli = Cli::parse();
@@ -101,62 +97,67 @@ fn main() -> Result<(), Box<dyn Error>> {
     let bytes = matches!(&cli.command, Commands::Status { bytes: true });
 
     let command = match cli.command {
-        Commands::Connect { vpn: Some(name), .. } => tunnelblick::Command::Connect(name),
-        Commands::Connect { .. }                  => tunnelblick::Command::ConnectAll,
-        Commands::Disconnect { vpn: Some(name), .. } => tunnelblick::Command::Disconnect(name),
-        Commands::Disconnect { .. }               => tunnelblick::Command::DisconnectAll,
+        Commands::Connect {
+            vpn: Some(name), ..
+        } => tunnelblick::Command::Connect(name),
+        Commands::Connect { .. } => tunnelblick::Command::ConnectAll,
+        Commands::Disconnect {
+            vpn: Some(name), ..
+        } => tunnelblick::Command::Disconnect(name),
+        Commands::Disconnect { .. } => tunnelblick::Command::DisconnectAll,
         Commands::Install { file } => {
             let abs = fs::canonicalize(&file)?;
             tunnelblick::Command::Install(abs.to_str().unwrap().to_string())
         }
-        Commands::List          => tunnelblick::Command::List,
+        Commands::List => tunnelblick::Command::List,
         Commands::Status { .. } => tunnelblick::Command::GetStatus,
-        Commands::Quit          => tunnelblick::Command::Quit,
-        Commands::Launch        => tunnelblick::Command::Launch,
-        Commands::Version       => tunnelblick::Command::GetVersion,
-        Commands::Complete      => unreachable!(),
+        Commands::Quit => tunnelblick::Command::Quit,
+        Commands::Launch => tunnelblick::Command::Launch,
+        Commands::Version => tunnelblick::Command::GetVersion,
+        Commands::Complete => unreachable!(),
     };
 
     let response = command.execute();
 
     match (command, response) {
-        (tunnelblick::Command::List, Ok(data)) => {
-            match data {
-                tunnelblick::ResponseData::StringArray(configs) => {
-                    for config in configs.iter() {
-                        println!("{}", config);
-                    }
-                },
-                _ => unreachable!(),
+        (tunnelblick::Command::List, Ok(data)) => match data {
+            tunnelblick::ResponseData::StringArray(configs) => {
+                for config in configs.iter() {
+                    println!("{}", config);
+                }
             }
+            _ => unreachable!(),
         },
-        (tunnelblick::Command::GetStatus, Ok(data)) => {
-            match data {
-                tunnelblick::ResponseData::Configurations(configs) => {
-                    let tab_writer = TabWriter::new(io::stdout());
-                    let mut writer = csv::WriterBuilder::new()
-                        .has_headers(false)
-                        .delimiter(b'\t')
-                        .from_writer(tab_writer);
-                    writer.write_record(&["NAME", "STATE", "AUTOCONNECT", "TX", "RX"])?;
-                    for config in configs.iter() {
-                        if bytes {
-                            writer.serialize(config)?;
-                        } else {
-                            let human_config = HumanConfiguration::from(config);
-                            writer.serialize(human_config)?;
-                        }
+        (tunnelblick::Command::GetStatus, Ok(data)) => match data {
+            tunnelblick::ResponseData::Configurations(configs) => {
+                let tab_writer = TabWriter::new(io::stdout());
+                let mut writer = csv::WriterBuilder::new()
+                    .has_headers(false)
+                    .delimiter(b'\t')
+                    .from_writer(tab_writer);
+                writer.write_record(&["NAME", "STATE", "AUTOCONNECT", "TX", "RX"])?;
+                for config in configs.iter() {
+                    if bytes {
+                        writer.serialize(config)?;
+                    } else {
+                        let human_config = HumanConfiguration::from(config);
+                        writer.serialize(human_config)?;
                     }
-                },
-                _ => unreachable!(),
+                }
             }
+            _ => unreachable!(),
         },
         (tunnelblick::Command::GetVersion, Ok(data)) => {
-            println!("{} {}\nTunnelblick {}", env!("CARGO_PKG_NAME"), version, data);
-        },
+            println!(
+                "{} {}\nTunnelblick {}",
+                env!("CARGO_PKG_NAME"),
+                version,
+                data
+            );
+        }
         (tunnelblick::Command::GetVersion, Err(_)) => {
             println!("{} {}", env!("CARGO_PKG_NAME"), version);
-        },
+        }
         (_, Err(message)) => {
             return Err(message);
         }
