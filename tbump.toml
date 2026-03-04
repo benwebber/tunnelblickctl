@@ -1,0 +1,24 @@
+[version]
+current = "0.2.0"
+regex = '''
+  (?P<major>\d+)
+  \.
+  (?P<minor>\d+)
+  \.
+  (?P<patch>\d+)
+  (?P<suffix>-\w+)?
+  '''
+
+[git]
+message_template = "Release {new_version}"
+tag_template = "v{new_version}"
+
+[[file]]
+src = "Cargo.toml"
+
+[[file]]
+src = "package.json"
+
+[[before_commit]]
+name = "Update Cargo.toml"
+cmd = "cargo update tunnelblickctl"
