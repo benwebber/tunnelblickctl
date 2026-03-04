@@ -110,12 +110,175 @@ impl fmt::Display for Command {
 }
 
 impl Command {
-    pub fn execute(&self) -> Result<ResponseData, Box<dyn error::Error>> {
-        let script = osascript::JavaScript::new(&format!("{}", self));
-        let response: Response = script.execute()?;
+    pub fn execute_with<F>(&self, runner: F) -> Result<ResponseData, Box<dyn error::Error>>
+    where
+        F: FnOnce(&str) -> Result<Response, Box<dyn error::Error>>,
+    {
+        let response = runner(&format!("{}", self))?;
         match response {
             Response::Success(data) => Ok(data),
             Response::Error(message) => Err(Box::new(Error { message })),
         }
     }
+
+    pub fn execute(&self) -> Result<ResponseData, Box<dyn error::Error>> {
+        self.execute_with(|script| {
+            osascript::JavaScript::new(script)
+                .execute::<Response>()
+                .map_err(Into::into)
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn response_success_string() {
+        let json = r#"{"status":"success","data":"5.3.4"}"#;
+        let r: Response = serde_json::from_str(json).unwrap();
+        assert!(matches!(r, Response::Success(ResponseData::String(_))));
+    }
+
+    #[test]
+    fn response_success_string_array() {
+        let json = r#"{"status":"success","data":["vpn-a","vpn-b"]}"#;
+        let r: Response = serde_json::from_str(json).unwrap();
+        assert!(matches!(r, Response::Success(ResponseData::StringArray(_))));
+    }
+
+    #[test]
+    fn response_success_configurations() {
+        let json = r#"{"status":"success","data":[{"name":"vpn","state":"CONNECTED","autoconnect":"yes","bytesIn":1024,"bytesOut":2048}]}"#;
+        let r: Response = serde_json::from_str(json).unwrap();
+        assert!(matches!(r, Response::Success(ResponseData::Configurations(_))));
+    }
+
+    #[test]
+    fn response_error() {
+        let json = r#"{"status":"error","data":"Tunnelblick is not running"}"#;
+        let r: Response = serde_json::from_str(json).unwrap();
+        assert!(matches!(r, Response::Error(_)));
+    }
+
+    macro_rules! test_response_data {
+        ($name:ident, $json:expr, $pat:pat) => {
+            #[test]
+            fn $name() {
+                let r: ResponseData = serde_json::from_str($json).unwrap();
+                assert!(matches!(r, $pat));
+            }
+        };
+    }
+
+    test_response_data!(
+        response_data_configurations,
+        r#"[{"name":"vpn","state":"CONNECTED","autoconnect":"yes","bytesIn":1024,"bytesOut":2048}]"#,
+        ResponseData::Configurations(_)
+    );
+    test_response_data!(response_data_string_array, r#"["a","b"]"#, ResponseData::StringArray(_));
+    test_response_data!(response_data_string, r#""hello""#, ResponseData::String(_));
+    test_response_data!(response_data_boolean, "true", ResponseData::Boolean(_));
+    test_response_data!(response_data_integer, "42", ResponseData::Integer(_));
+
+    #[test]
+    fn execute_with_get_version_success() {
+        let result = Command::GetVersion.execute_with(|_| {
+            Ok(Response::Success(ResponseData::String("5.3.4".to_string())))
+        });
+        assert!(matches!(result, Ok(ResponseData::String(_))));
+    }
+
+    #[test]
+    fn execute_with_list_success() {
+        let result = Command::List.execute_with(|_| {
+            Ok(Response::Success(ResponseData::StringArray(vec![
+                "vpn-a".to_string(),
+                "vpn-b".to_string(),
+            ])))
+        });
+        assert!(matches!(result, Ok(ResponseData::StringArray(_))));
+    }
+
+    #[test]
+    fn execute_with_get_status_success() {
+        let result = Command::GetStatus.execute_with(|_| {
+            Ok(Response::Success(ResponseData::Configurations(vec![
+                Configuration {
+                    name: "vpn".to_string(),
+                    state: "CONNECTED".to_string(),
+                    autoconnect: "yes".to_string(),
+                    bytes_in: 1024,
+                    bytes_out: 2048,
+                },
+            ])))
+        });
+        assert!(matches!(result, Ok(ResponseData::Configurations(_))));
+    }
+
+    #[test]
+    fn execute_with_error_response() {
+        let result = Command::GetVersion
+            .execute_with(|_| Ok(Response::Error("Tunnelblick is not running".to_string())));
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), "Tunnelblick is not running");
+    }
+
+    #[test]
+    fn execute_with_runner_error() {
+        let result = Command::GetVersion
+            .execute_with(|_| -> Result<Response, Box<dyn std::error::Error>> {
+                Err("runner failed".into())
+            });
+        assert!(result.is_err());
+    }
+
+    macro_rules! test_command_display {
+        ($name:ident, $cmd:expr, $suffix:expr) => {
+            #[test]
+            fn $name() {
+                assert!(format!("{}", $cmd).ends_with($suffix));
+            }
+        };
+    }
+
+    test_command_display!(
+        display_connect,
+        Command::Connect("work-vpn".to_string()),
+        r#"return rpc.call("connect", "work-vpn");"#
+    );
+    test_command_display!(
+        display_connect_all,
+        Command::ConnectAll,
+        r#"return rpc.call("connectAll");"#
+    );
+    test_command_display!(
+        display_disconnect,
+        Command::Disconnect("work-vpn".to_string()),
+        r#"return rpc.call("disconnect", "work-vpn");"#
+    );
+    test_command_display!(
+        display_disconnect_all,
+        Command::DisconnectAll,
+        r#"return rpc.call("disconnectAll");"#
+    );
+    test_command_display!(
+        display_get_status,
+        Command::GetStatus,
+        r#"return rpc.call("getStatus");"#
+    );
+    test_command_display!(
+        display_get_version,
+        Command::GetVersion,
+        r#"return rpc.call("getVersion");"#
+    );
+    test_command_display!(
+        display_install,
+        Command::Install("/path/to/vpn.tblk".to_string()),
+        r#"return rpc.call("install", "/path/to/vpn.tblk");"#
+    );
+    test_command_display!(display_launch, Command::Launch, r#"return rpc.call("launch");"#);
+    test_command_display!(display_list, Command::List, r#"return rpc.call("list");"#);
+    test_command_display!(display_quit, Command::Quit, r#"return rpc.call("quit");"#);
 }

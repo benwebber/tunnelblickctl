@@ -160,3 +160,53 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Cli, Commands, HumanConfiguration, tunnelblick};
+    use clap::Parser;
+
+    macro_rules! test_cli {
+        ($name:ident, [$($arg:expr),*], $pat:pat) => {
+            #[test]
+            fn $name() {
+                let result = Cli::try_parse_from(["tunnelblickctl" $(, $arg)*])
+                    .map(|c| c.command);
+                assert!(matches!(result, $pat));
+            }
+        };
+    }
+
+    test_cli!(connect_vpn, ["connect", "work-vpn"], Ok(Commands::Connect { vpn: Some(_), all: false }));
+    test_cli!(connect_all, ["connect", "--all"], Ok(Commands::Connect { vpn: None, all: true }));
+    test_cli!(connect_no_args, ["connect"], Err(_));
+    test_cli!(connect_exclusive, ["connect", "work-vpn", "--all"], Err(_));
+    test_cli!(disconnect_vpn, ["disconnect", "work-vpn"], Ok(Commands::Disconnect { vpn: Some(_), all: false }));
+    test_cli!(disconnect_all, ["disconnect", "--all"], Ok(Commands::Disconnect { vpn: None, all: true }));
+    test_cli!(list_alias, ["ls"], Ok(Commands::List));
+    test_cli!(status_default, ["status"], Ok(Commands::Status { bytes: false }));
+    test_cli!(status_bytes, ["status", "--bytes"], Ok(Commands::Status { bytes: true }));
+    test_cli!(no_subcommand, [], Err(_));
+
+    macro_rules! test_human_config {
+        ($name:ident, $bytes_in:expr, $bytes_out:expr, $expected_in:expr, $expected_out:expr) => {
+            #[test]
+            fn $name() {
+                let config = tunnelblick::Configuration {
+                    name: String::new(),
+                    state: String::new(),
+                    autoconnect: String::new(),
+                    bytes_in: $bytes_in,
+                    bytes_out: $bytes_out,
+                };
+                let human = HumanConfiguration::from(&config);
+                assert_eq!(human.bytes_in, $expected_in);
+                assert_eq!(human.bytes_out, $expected_out);
+            }
+        };
+    }
+
+    test_human_config!(human_config_zero, 0, 0, "0 B", "0 B");
+    test_human_config!(human_config_kib, 1024, 0, "1 KiB", "0 B");
+    test_human_config!(human_config_mib, 0, 1_048_576, "0 B", "1 MiB");
+}
