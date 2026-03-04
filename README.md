@@ -1,5 +1,4 @@
 # tunnelblickctl
-[![Build status](https://ci.appveyor.com/api/projects/status/15lfq1l4svlf7t40/branch/master?svg=true)](https://ci.appveyor.com/project/benwebber/tunnelblickctl/branch/master)
 
 Command-line interface for [Tunnelblick](https://tunnelblick.net/), the *de facto* OpenVPN client for OS X.
 
